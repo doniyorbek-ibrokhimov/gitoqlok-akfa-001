@@ -20,27 +20,6 @@ Mapping Load
     1
 From [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
 Where Match(Left(RACCT, 5), '63003','73003');
-///$tab Optimizing tables
-INCLUDE:
-NOCONCATENATE LOAD * INLINE [
-	RLDNR, PARVW, AWREF_REV
-	'0L', 'AG', ' '
-];
-
-NOT_INCLUDE:
-NOCONCATENATE LOAD * INLINE [
-	LIFNR
-	' '
-];
-
-INCLUDE_NOT_INCLUDE:
-NOCONCATENATE LOAD
-	LIFNR
-FROM [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
-WHERE NOT Exists(LIFNR)
-;
-
-DROP TABLE NOT_INCLUDE;
 ///$tab VAR
 Set vConstructor=WildMatch('|'&Concat(_Конструктор_Изм,'|')&'|','*|$1|*')=1;
 Set vConstructor_Mesures=WildMatch('|'&Concat(_Конструктор_Мер_Num,'|')&'|','*|$1|*')=1;
@@ -250,7 +229,7 @@ NOCONCATENATE LOAD
     SGTXT,
     GJAHR
 FROM [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
-WHERE Exists(RLDNR) and LIFNR<>' ' and  RACCT like '23*' or RACCT like '33*';
+WHERE RLDNR = '0L' and LIFNR<>' ' and  RACCT like '23*' or RACCT like '33*';
 ///$tab Принятый инвойс (закуп)
 [ReceivedInvoice]:
 CONCATENATE(FactTable) LOAD
@@ -350,9 +329,6 @@ FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(
 
 
 ///$tab Cleanup
-DROP TABLE INCLUDE;
-DROP TABLE INCLUDE_NOT_INCLUDE;
-
 drop Table [10_ACDOCA];
 ///$tab Storing
 // Store [Data] into [lib://Data/!QVD DATA/APP_001/PreModel/Data.qvd](qvd);

@@ -25,4 +25,4 @@ NOCONCATENATE LOAD
     SGTXT,
     GJAHR
 FROM [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
-WHERE Exists(RLDNR) and LIFNR<>' ' and  RACCT like '23*' or RACCT like '33*';
+WHERE RLDNR = '0L' and LIFNR<>' ' and  RACCT like '23*' or RACCT like '33*';
