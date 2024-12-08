@@ -1,0 +1,3 @@
+///$tab Storing
+// Store [Data] into [lib://Data/!QVD DATA/APP_001/PreModel/Data.qvd](qvd);
+// Drop table [Data];

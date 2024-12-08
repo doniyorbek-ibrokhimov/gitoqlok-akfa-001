@@ -1,0 +1,4 @@
+///$tab Facttable
+FactTable:
+LOAD 0 as ID AutoGenerate 0
+;

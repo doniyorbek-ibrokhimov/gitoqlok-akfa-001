@@ -1,0 +1,22 @@
+///$tab MAIN
+// $(Include=[lib://Data/Script/SA.qvs]);
+// $(Include=[lib://Data/Script/Format.qvs]);
+
+// Let vDate=Date(Today());
+
+// Trace vDate=$(vDate);
+
+$(Include=[lib://Data/Script/SA.qvs]);
+$(Include=[lib://Data/Script/Format.qvs]);
+
+Let vDate=Date(Today());
+
+Trace vDate=$(vDate);
+
+
+[KURS_DIFF]:
+Mapping Load
+	Distinct RBUKRS&BELNR&GJAHR,
+    1
+From [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
+Where Match(Left(RACCT, 5), '63003','73003');

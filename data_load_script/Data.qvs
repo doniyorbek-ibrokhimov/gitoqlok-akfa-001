@@ -1,0 +1,8 @@
+///$tab Data
+// [Data]:
+// Load*,
+// 	replace(МВП,' ','') as WERKS_ACCESS,
+//     if([Тип канала]='Импорт', 2, 1) as FLAG_SUPPLY_CHANNEL
+
+
+// From [lib://Data/!QVD DATA/APP_001/PreModel/Data.qvd](qvd);

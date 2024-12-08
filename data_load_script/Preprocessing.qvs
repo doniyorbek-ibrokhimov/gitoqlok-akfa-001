@@ -1,0 +1,28 @@
+///$tab Preprocessing
+[10_ACDOCA]:
+NOCONCATENATE LOAD
+    RBUKRS,
+    LIFNR,
+    ZUONR,
+    AWREF,
+    BLART,
+    TSL,
+    WSL,
+    HSL,
+    KSL,
+    OSL,
+    BUDAT,
+    PRCTR,
+    RWCUR,
+    KOART,
+    RACCT,
+    AWREF_REV,
+    AUGDT,
+    BELNR,
+    DRCRK,
+    BSTAT,
+    MATNR,
+    SGTXT,
+    GJAHR
+FROM [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
+WHERE Exists(RLDNR) and LIFNR<>' ' and  RACCT like '23*' or RACCT like '33*';

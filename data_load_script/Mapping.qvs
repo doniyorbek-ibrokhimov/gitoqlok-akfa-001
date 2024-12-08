@@ -1,0 +1,142 @@
+///$tab Mapping
+[MATERIALS_SUPPLY]:
+MAPPING LOAD
+    "SAP код материала" as MATNR,
+    Группировка
+    
+FROM [lib://Data/!QVD DATA/QVD/GD/MATERIALS_SUPPLY.qvd](qvd);
+
+///////////////////////////////////////////////////////////////////////
+[Поставщик_справочник]:
+Mapping Load
+LIFNR,
+NAME1
+FROM [lib://Data/!QVD DATA/QVD/SAP/LFA1.qvd](qvd);
+
+[Контракт_EKKO]:
+Mapping Load
+LIFNR, 
+KONNR
+FROM [lib://Data/!QVD DATA/QVD/SAP/EKKO.qvd](qvd);
+
+[Контракт]:
+Mapping Load
+INTCNUM as KONNR, 
+EXTCNUM
+FROM [lib://Data/!QVD DATA/QVD/SAP/J_3RFCNT.qvd](qvd);
+
+/////////////////////////////////////
+[КаналЗакупа]:
+LOAD * inline [
+BSART|BATXT
+ZIMP|Импорт
+ZLOC|Местный
+ZSRV|Услуги
+XLOC|Местный
+XZIMP|Импорт
+
+] (delimiter is '|');
+
+[Справочник BSART]:
+Mapping load
+BSART,
+BATXT
+Resident [КаналЗакупа];
+Drop table [КаналЗакупа];
+////////////////////////////////////////
+
+[EKKO_BSART]:
+Mapping Load
+LIFNR,
+BSART
+FROM [lib://Data/!QVD DATA/QVD/SAP/EKKO.qvd](qvd)
+Where Match(BSART, 'ZIMP','ZLOC','ZSRV','XLOC','XZIMP');
+
+
+MAPPING_ZZ_DDS_ITEM:
+MAPPING LOAD
+    BUKRS & '|' & LIFNR as BUKRS_LIFNR,
+    ZZ_DDS_ITEM
+FROM [lib://Data/!QVD DATA/QVD/SAP/LFB1.qvd](qvd)
+;
+
+// MAPPING_ITEM:
+// MAPPING LOAD
+//     ZZ_DDS_ITEM,
+//     ITEM
+// FROM [lib://Data/!QVD DATA/QVD/SAP/FIRUC_CF_ITEM.qvd](qvd)
+// ;
+
+// маппинг для наименования клиента
+MAPPING_NAME:
+MAPPING LOAD
+    LIFNR,
+    NAME1 as NAME
+FROM [lib://Data/!QVD DATA/QVD/SAP/LFA1.qvd](qvd)
+Where LIFNR<>' '
+;
+
+// маппинг для наименования контракта
+MAPPING_EXTCNUM:
+Mapping LOAD
+	INTCNUM as ZUONR,
+    EXTCNUM
+FROM [lib://Data/!QVD DATA/QVD/SAP/J_3RFCNT.qvd](qvd)
+;
+
+MAPPING_VTWEG:
+MAPPING LOAD
+	VBELN as AWREF,
+	VTWEG
+FROM [lib://Data/!QVD DATA/QVD/SAP/VBRK.qvd](qvd)
+;
+
+
+MARA_GROUP:
+mapping LOAD
+    MATNR,
+    MATKL
+FROM [lib://Data/!QVD DATA/QVD/SAP/MARA.qvd]
+(qvd);
+
+
+GP_SUPPLY_LOCAL:
+mapping Load
+    Text(LIFNR) as LIFNR,
+    Актуальность as [Актуальность поставщиков]
+    
+FROM [lib://Data/!QVD DATA/QVD/GD/BP_SUPPLY_LOCAL.qvd](qvd);
+
+
+
+
+//////////////////////////////////////////Внешний номер инвойса 
+[RBKP_инвойс]:
+Load
+    BELNR as AWREF,
+    XBLNR as [Внешний номер инвойса]
+    
+FROM [lib://Data/!QVD DATA/QVD/SAP/RBKP.qvd](qvd)
+Where left(STBLG,1)<>5
+and left(STJAH,1)<>2
+and IVTYP <> 5
+and Match(RBSTAT, 5, 4)
+;
+
+
+[RSEG_инвойс]:
+Inner Join(RBKP_инвойс)
+LOAD
+    BELNR as AWREF
+    
+FROM [lib://Data/!QVD DATA/QVD/SAP/RSEG.qvd](qvd)
+Where TBTKZ<>'X'
+and EXKBE='X'
+;
+[RBKP_RSEG_Инвойс]:
+Mapping Load
+AWREF,
+[Внешний номер инвойса]
+Resident [RBKP_инвойс];
+Drop table [RBKP_инвойс];
+//////////////////////////////////////////

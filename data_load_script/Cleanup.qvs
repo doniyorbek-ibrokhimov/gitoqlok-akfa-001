@@ -1,0 +1,5 @@
+///$tab Cleanup
+DROP TABLE INCLUDE;
+DROP TABLE INCLUDE_NOT_INCLUDE;
+
+drop Table [10_ACDOCA];
