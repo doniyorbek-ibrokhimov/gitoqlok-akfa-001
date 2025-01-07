@@ -220,7 +220,7 @@ Call Timer;
 
 ///$tab FinalData
 Data:
-generic LOAD *,  
+NoConcatenate LOAD *,  
 	ApplyMap('Справочник BSART', BSART, 'Нет канала закупа') as [Тип канала],
     If([Актуальность]='актуальный', [Актуальность], 'Не актуальный') as [Актуальность поставщиков],
 	LIFNR&МВП as LIFNR_KEY,
@@ -228,7 +228,7 @@ generic LOAD *,
     if(ApplyMap('Справочник BSART', BSART, 'Нет канала закупа')='Импорт', 2, 1) as FLAG_SUPPLY_CHANNEL,
 ;
 
-LOAD
+NoConcatenate LOAD
     ApplyMap('RBKP_RSEG_Инвойс', AWREF, 'Нет внеш. инвойса') as [Внешний номер инвойса],
     ApplyMap('MAPPING_ZZ_DDS_ITEM', RBUKRS & '|' & LIFNR, 'Нет ZZ_DDS_ITEM') as ZZ_DDS_ITEM,
     ApplyMap('MAPPING_NAME', LIFNR, 'Нет поставщика') as Поставщик, 
@@ -300,7 +300,6 @@ FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(
 Next
 
 Call Timer;
-
 
 
 Поставщики_Справочник:
