@@ -33,3 +33,5 @@ Load*inline
 Канал 2, 15
 ]
 ;
+
+Call Timer;

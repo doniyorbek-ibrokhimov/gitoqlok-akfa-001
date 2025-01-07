@@ -1,37 +1,69 @@
 ///$tab FinalData
 Data:
-NOCONCATENATE LOAD*,  
-
+generic LOAD *,  
+	ApplyMap('Справочник BSART', BSART, 'Нет канала закупа') as [Тип канала],
+    If([Актуальность]='актуальный', [Актуальность], 'Не актуальный') as [Актуальность поставщиков],
 	LIFNR&МВП as LIFNR_KEY,
     replace(МВП,' ','') as WERKS_ACCESS,
     if(ApplyMap('Справочник BSART', BSART, 'Нет канала закупа')='Импорт', 2, 1) as FLAG_SUPPLY_CHANNEL,
-
-    ApplyMap('RBKP_RSEG_Инвойс', AWREF, 'Нет внеш. инвойса') as [Внешний номер инвойса],
-//     ApplyMap('SGTXT uchun', SGTXT) as [hujjat raqami],
-    ApplyMap('MAPPING_ZZ_DDS_ITEM', БЕ & '|' & LIFNR, 'Нет ZZ_DDS_ITEM') as ZZ_DDS_ITEM,
-    ApplyMap('MAPPING_NAME', LIFNR, 'Нет поставщика') as Поставщик,
-    ApplyMap('MAPPING_EXTCNUM', ZUONR, 'Нет контракта') as Контракт,
-    ApplyMap('Справочник BSART', BSART, 'Нет канала закупа') as [Тип канала],
-    If([Актуальность]='актуальный', [Актуальность], 'Не актуальный') as [Актуальность поставщиков],
-    [Дата проводки] as RDAY
-    
 ;
-NOCONCATENATE LOAD *,
-    ApplyMap('GP_SUPPLY_LOCAL', LIFNR, 'Нет данных') as [Актуальность],
-    ApplyMap('MARA_GROUP', MATNR, 'Нет группы материалов') as [Группа материалов],
-    ApplyMap('EKKO_BSART', LIFNR) as BSART, 
 
-    ApplyMap('MATERIALS_SUPPLY', MATNR, 'Нет группировки') as [Группировка], 
-    "Валюта" as Валюта_WAERS,
+LOAD
+    ApplyMap('RBKP_RSEG_Инвойс', AWREF, 'Нет внеш. инвойса') as [Внешний номер инвойса],
+    ApplyMap('MAPPING_ZZ_DDS_ITEM', RBUKRS & '|' & LIFNR, 'Нет ZZ_DDS_ITEM') as ZZ_DDS_ITEM,
+    ApplyMap('MAPPING_NAME', LIFNR, 'Нет поставщика') as Поставщик, 
+    ApplyMap('MAPPING_EXTCNUM', ZUONR, 'Нет контракта') as Контракт,
+	ApplyMap('GP_SUPPLY_LOCAL', LIFNR, 'Нет данных') as [Актуальность],
+    ApplyMap('EKKO_BSART', LIFNR) as BSART, 
+    ApplyMap('MARA_GROUP', MATNR, 'Нет группы материалов') as [Группа материалов],
+	ApplyMap('MATERIALS_SUPPLY', MATNR, 'Нет группировки') as [Группировка], 
     'ZUD' as Валюта_ZUD,
     'UZS' as Валюта_UZS,
-    'ZUDMVP' as Валюта_ZUDMVP
-    
-RESIDENT FactTable
-Where RACCT<>3309999990 and RACCT<>3300101300;
-DROP TABLE FactTable;
-
-
+    'ZUDMVP' as Валюта_ZUDMVP,
+    if(ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR) = 1, 'Переоценка',
+    if(Match(BLART, 'KR', 'RE', 'AC', 'KG', 'RI', 'RM', 'I2', 'XF', 'XR', 'XO', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6'),'Принятый инвойс',  
+    if(Match(BLART, 'KA', 'KZ', 'XP', 'ZP', 'PW'),'Оплата',
+    if(Match(BLART, 'KN','AO','VZ','GT', 'NA', 'ST', 'KK', 'SA', 'PE', 'CL', 'CB', 'CP'),'Корректировка'
+    )   )  )  ) as key,
+	WSL as Сумма_WAERS,
+    HSL as Сумма_UZS,
+    KSL as Сумма_ZUD,
+    OSL as Сумма_ZUDMVP,
+    Text(Right(PRCTR, 4)) as МВП,
+	if(AWREF_REV = ' ', 1, 0) as AWREF_REV,
+    RBUKRS as БЕ,
+    RBUKRS,
+    LIFNR,
+    ZUONR,
+    BLART,
+    TSL,
+    WSL,
+    HSL,
+    KSL,
+    OSL,
+    BUDAT as RDAY,
+    BUDAT as [Дата проводки],
+    BUDAT,
+    PRCTR,
+    RWCUR as Валюта,
+    RWCUR as Валюта_WAERS,
+    KOART,
+    RACCT,
+    Date(if(IsNull(num(AUGDT)), 1, num(AUGDT))) as AUGDT,
+    BELNR,
+    DRCRK,
+    BSTAT,
+    MATNR,
+    SGTXT,
+    GJAHR
+FROM [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
+WHERE RLDNR = '0L' 
+	and LIFNR<>' ' 
+    and (RACCT like '23*' or RACCT like '33*')
+    and RACCT<>3309999990 
+    and RACCT<>3300101300;
+;
+Call Timer;
 
 Set vFolders ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc', '1DX-I7dh-5sHLNGtJKGBudMfhFvW86com', '18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4', '135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25', '1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu', '1BGhV3VIQwBC4lqFUey9TSub9gVciVohp', '1Cgc6CcISKn00qJoHptQs0SP95P3He3FI', '11DS1qYTGG0eEl1DWHqOh14qH0vJiEisY', '1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS', '1IWD6tsty-mUY9heBaLAdtymi074CnCrI';
 
@@ -47,6 +79,7 @@ FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(
 (ooxml, embedded labels, table is Поставщики);
 Next
 
+Call Timer;
 
 
 
@@ -59,3 +92,4 @@ LOAD
     "Vengroup 2"
 FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
 (ooxml, embedded labels, table is Поставщики);
+Call Timer;

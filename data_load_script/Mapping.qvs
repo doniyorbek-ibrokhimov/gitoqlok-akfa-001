@@ -5,6 +5,7 @@ MAPPING LOAD
     Группировка
     
 FROM [lib://Data/!QVD DATA/QVD/GD/MATERIALS_SUPPLY.qvd](qvd);
+Call Timer;
 
 ///////////////////////////////////////////////////////////////////////
 [Поставщик_справочник]:
@@ -12,18 +13,21 @@ Mapping Load
 LIFNR,
 NAME1
 FROM [lib://Data/!QVD DATA/QVD/SAP/LFA1.qvd](qvd);
+Call Timer;
 
 [Контракт_EKKO]:
 Mapping Load
 LIFNR, 
 KONNR
 FROM [lib://Data/!QVD DATA/QVD/SAP/EKKO.qvd](qvd);
+Call Timer;
 
 [Контракт]:
 Mapping Load
 INTCNUM as KONNR, 
 EXTCNUM
 FROM [lib://Data/!QVD DATA/QVD/SAP/J_3RFCNT.qvd](qvd);
+Call Timer;
 
 /////////////////////////////////////
 [КаналЗакупа]:
@@ -36,6 +40,7 @@ XLOC|Местный
 XZIMP|Импорт
 
 ] (delimiter is '|');
+Call Timer;
 
 [Справочник BSART]:
 Mapping load
@@ -44,6 +49,7 @@ BATXT
 Resident [КаналЗакупа];
 Drop table [КаналЗакупа];
 ////////////////////////////////////////
+Call Timer;
 
 [EKKO_BSART]:
 Mapping Load
@@ -51,6 +57,7 @@ LIFNR,
 BSART
 FROM [lib://Data/!QVD DATA/QVD/SAP/EKKO.qvd](qvd)
 Where Match(BSART, 'ZIMP','ZLOC','ZSRV','XLOC','XZIMP');
+Call Timer;
 
 
 MAPPING_ZZ_DDS_ITEM:
@@ -59,6 +66,7 @@ MAPPING LOAD
     ZZ_DDS_ITEM
 FROM [lib://Data/!QVD DATA/QVD/SAP/LFB1.qvd](qvd)
 ;
+Call Timer;
 
 // MAPPING_ITEM:
 // MAPPING LOAD
@@ -75,6 +83,7 @@ MAPPING LOAD
 FROM [lib://Data/!QVD DATA/QVD/SAP/LFA1.qvd](qvd)
 Where LIFNR<>' '
 ;
+Call Timer;
 
 // маппинг для наименования контракта
 MAPPING_EXTCNUM:
@@ -83,6 +92,7 @@ Mapping LOAD
     EXTCNUM
 FROM [lib://Data/!QVD DATA/QVD/SAP/J_3RFCNT.qvd](qvd)
 ;
+Call Timer;
 
 MAPPING_VTWEG:
 MAPPING LOAD
@@ -90,6 +100,7 @@ MAPPING LOAD
 	VTWEG
 FROM [lib://Data/!QVD DATA/QVD/SAP/VBRK.qvd](qvd)
 ;
+Call Timer;
 
 
 MARA_GROUP:
@@ -98,6 +109,7 @@ mapping LOAD
     MATKL
 FROM [lib://Data/!QVD DATA/QVD/SAP/MARA.qvd]
 (qvd);
+Call Timer;
 
 
 GP_SUPPLY_LOCAL:
@@ -106,7 +118,7 @@ mapping Load
     Актуальность as [Актуальность поставщиков]
     
 FROM [lib://Data/!QVD DATA/QVD/GD/BP_SUPPLY_LOCAL.qvd](qvd);
-
+Call Timer;
 
 
 
@@ -122,6 +134,7 @@ and left(STJAH,1)<>2
 and IVTYP <> 5
 and Match(RBSTAT, 5, 4)
 ;
+Call Timer;
 
 
 [RSEG_инвойс]:
@@ -133,6 +146,8 @@ FROM [lib://Data/!QVD DATA/QVD/SAP/RSEG.qvd](qvd)
 Where TBTKZ<>'X'
 and EXKBE='X'
 ;
+Call Timer;
+
 [RBKP_RSEG_Инвойс]:
 Mapping Load
 AWREF,
@@ -140,3 +155,4 @@ AWREF,
 Resident [RBKP_инвойс];
 Drop table [RBKP_инвойс];
 //////////////////////////////////////////
+Call Timer;

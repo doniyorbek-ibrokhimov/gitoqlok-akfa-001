@@ -1,11 +1,4 @@
 ///$tab MAIN
-// $(Include=[lib://Data/Script/SA.qvs]);
-// $(Include=[lib://Data/Script/Format.qvs]);
-
-// Let vDate=Date(Today());
-
-// Trace vDate=$(vDate);
-
 $(Include=[lib://Data/Script/SA.qvs]);
 $(Include=[lib://Data/Script/Format.qvs]);
 
@@ -13,10 +6,19 @@ Let vDate=Date(Today());
 
 Trace vDate=$(vDate);
 
+Let vtime = Time(Now());
+Sub Timer
+	
+    vtime = Interval(Time(Now()) - vtime, 's');
+    Trace Прошло секунд:  $(vtime); // Используйте vtime вместо vtime1
+    Let vtime = Time(Now());
+End Sub;
 
 [KURS_DIFF]:
 Mapping Load
 	Distinct RBUKRS&BELNR&GJAHR,
     1
 From [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
-Where Match(Left(RACCT, 5), '63003','73003');
+Where (RACCT like '63003*' or RACCT like '73003*');
+;
+Call Timer;
