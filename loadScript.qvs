@@ -16,11 +16,11 @@ End Sub;
 
 [KURS_DIFF]:
 Mapping Load
-	Distinct RBUKRS&BELNR&GJAHR,
+    Distinct RBUKRS&BELNR&GJAHR,
     1
 From [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
-Where (RACCT like '63003*' or RACCT like '73003*');
-;
+Where (RACCT like '63003*' or RACCT like '73003*')
+and RLDNR = '0L';  // Add main filter here
 Call Timer;
 ///$tab VAR
 Set vConstructor=WildMatch('|'&Concat(_Конструктор_Изм,'|')&'|','*|$1|*')=1;
@@ -155,15 +155,6 @@ FROM [lib://Data/!QVD DATA/QVD/SAP/J_3RFCNT.qvd](qvd)
 ;
 Call Timer;
 
-MAPPING_VTWEG:
-MAPPING LOAD
-	VBELN as AWREF,
-	VTWEG
-FROM [lib://Data/!QVD DATA/QVD/SAP/VBRK.qvd](qvd)
-;
-Call Timer;
-
-
 MARA_GROUP:
 mapping LOAD
     MATNR,
@@ -184,37 +175,27 @@ Call Timer;
 
 
 //////////////////////////////////////////Внешний номер инвойса 
-[RBKP_инвойс]:
-Load
+[RBKP_RSEG_Инвойс]:
+Mapping Load
+    AWREF,
+    [Внешний номер инвойса]
+;
+LOAD 
     BELNR as AWREF,
     XBLNR as [Внешний номер инвойса]
-    
 FROM [lib://Data/!QVD DATA/QVD/SAP/RBKP.qvd](qvd)
 Where left(STBLG,1)<>5
 and left(STJAH,1)<>2
 and IVTYP <> 5
-and Match(RBSTAT, 5, 4)
-;
-Call Timer;
+and Match(RBSTAT, 5, 4);
 
-
-[RSEG_инвойс]:
-Inner Join(RBKP_инвойс)
+Inner Join
 LOAD
     BELNR as AWREF
-    
 FROM [lib://Data/!QVD DATA/QVD/SAP/RSEG.qvd](qvd)
 Where TBTKZ<>'X'
-and EXKBE='X'
-;
-Call Timer;
+and EXKBE='X';
 
-[RBKP_RSEG_Инвойс]:
-Mapping Load
-AWREF,
-[Внешний номер инвойса]
-Resident [RBKP_инвойс];
-Drop table [RBKP_инвойс];
 //////////////////////////////////////////
 Call Timer;
 
@@ -312,6 +293,7 @@ LOAD
 FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
 (ooxml, embedded labels, table is Поставщики);
 Call Timer;
+
 
 
 ///$tab Calendar

@@ -94,15 +94,6 @@ FROM [lib://Data/!QVD DATA/QVD/SAP/J_3RFCNT.qvd](qvd)
 ;
 Call Timer;
 
-MAPPING_VTWEG:
-MAPPING LOAD
-	VBELN as AWREF,
-	VTWEG
-FROM [lib://Data/!QVD DATA/QVD/SAP/VBRK.qvd](qvd)
-;
-Call Timer;
-
-
 MARA_GROUP:
 mapping LOAD
     MATNR,
@@ -123,36 +114,26 @@ Call Timer;
 
 
 //////////////////////////////////////////Внешний номер инвойса 
-[RBKP_инвойс]:
-Load
+[RBKP_RSEG_Инвойс]:
+Mapping Load
+    AWREF,
+    [Внешний номер инвойса]
+;
+LOAD 
     BELNR as AWREF,
     XBLNR as [Внешний номер инвойса]
-    
 FROM [lib://Data/!QVD DATA/QVD/SAP/RBKP.qvd](qvd)
 Where left(STBLG,1)<>5
 and left(STJAH,1)<>2
 and IVTYP <> 5
-and Match(RBSTAT, 5, 4)
-;
-Call Timer;
+and Match(RBSTAT, 5, 4);
 
-
-[RSEG_инвойс]:
-Inner Join(RBKP_инвойс)
+Inner Join
 LOAD
     BELNR as AWREF
-    
 FROM [lib://Data/!QVD DATA/QVD/SAP/RSEG.qvd](qvd)
 Where TBTKZ<>'X'
-and EXKBE='X'
-;
-Call Timer;
+and EXKBE='X';
 
-[RBKP_RSEG_Инвойс]:
-Mapping Load
-AWREF,
-[Внешний номер инвойса]
-Resident [RBKP_инвойс];
-Drop table [RBKP_инвойс];
 //////////////////////////////////////////
 Call Timer;
