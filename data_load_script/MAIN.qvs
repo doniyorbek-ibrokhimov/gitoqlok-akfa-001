@@ -16,9 +16,9 @@ End Sub;
 
 [KURS_DIFF]:
 Mapping Load
-    Distinct RBUKRS&BELNR&GJAHR,
-    1
+    RBUKRS&BELNR&GJAHR as %KEY,
+    1 as %VALUE
 From [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
-Where (RACCT like '63003*' or RACCT like '73003*')
-and RLDNR = '0L';  // Add main filter here
+Where Match(left(RACCT,5),'63003','73003')
+and RLDNR = '0L';
 Call Timer;

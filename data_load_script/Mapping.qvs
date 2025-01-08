@@ -7,30 +7,20 @@ MAPPING LOAD
 FROM [lib://Data/!QVD DATA/QVD/GD/MATERIALS_SUPPLY.qvd](qvd);
 Call Timer;
 
-///////////////////////////////////////////////////////////////////////
-[Поставщик_справочник]:
-Mapping Load
-LIFNR,
-NAME1
-FROM [lib://Data/!QVD DATA/QVD/SAP/LFA1.qvd](qvd);
+// маппинг для наименования клиента
+MAPPING_NAME:
+MAPPING LOAD
+    LIFNR,
+    NAME1 as NAME
+FROM [lib://Data/!QVD DATA/QVD/SAP/LFA1.qvd](qvd)
+Where LIFNR<>' '
+;
 Call Timer;
 
-[Контракт_EKKO]:
-Mapping Load
-LIFNR, 
-KONNR
-FROM [lib://Data/!QVD DATA/QVD/SAP/EKKO.qvd](qvd);
-Call Timer;
-
-[Контракт]:
-Mapping Load
-INTCNUM as KONNR, 
-EXTCNUM
-FROM [lib://Data/!QVD DATA/QVD/SAP/J_3RFCNT.qvd](qvd);
-Call Timer;
-
-/////////////////////////////////////
-[КаналЗакупа]:
+[Справочник BSART]:
+Mapping
+LOAD BSART as %KEY,
+     BATXT as %VALUE;
 LOAD * inline [
 BSART|BATXT
 ZIMP|Импорт
@@ -38,17 +28,7 @@ ZLOC|Местный
 ZSRV|Услуги
 XLOC|Местный
 XZIMP|Импорт
-
 ] (delimiter is '|');
-Call Timer;
-
-[Справочник BSART]:
-Mapping load
-BSART,
-BATXT
-Resident [КаналЗакупа];
-Drop table [КаналЗакупа];
-////////////////////////////////////////
 Call Timer;
 
 [EKKO_BSART]:
@@ -68,15 +48,6 @@ FROM [lib://Data/!QVD DATA/QVD/SAP/LFB1.qvd](qvd)
 ;
 Call Timer;
 
-// маппинг для наименования клиента
-MAPPING_NAME:
-MAPPING LOAD
-    LIFNR,
-    NAME1 as NAME
-FROM [lib://Data/!QVD DATA/QVD/SAP/LFA1.qvd](qvd)
-Where LIFNR<>' '
-;
-Call Timer;
 
 // маппинг для наименования контракта
 MAPPING_EXTCNUM:
