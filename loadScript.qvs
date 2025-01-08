@@ -10,7 +10,7 @@ Let vtime = Time(Now());
 Sub Timer
 	
     vtime = Interval(Time(Now()) - vtime, 's');
-    Trace Прошло секунд:  $(vtime); // Используйте vtime вместо vtime1
+    Trace <---- Прошло секунд:  $(vtime) ---->; // Используйте vtime вместо vtime1
     Let vtime = Time(Now());
 End Sub;
 
@@ -128,13 +128,6 @@ MAPPING LOAD
 FROM [lib://Data/!QVD DATA/QVD/SAP/LFB1.qvd](qvd)
 ;
 Call Timer;
-
-// MAPPING_ITEM:
-// MAPPING LOAD
-//     ZZ_DDS_ITEM,
-//     ITEM
-// FROM [lib://Data/!QVD DATA/QVD/SAP/FIRUC_CF_ITEM.qvd](qvd)
-// ;
 
 // маппинг для наименования клиента
 MAPPING_NAME:
@@ -273,7 +266,6 @@ for each FLD in $(vFolders)
 LOAD
     Поставщик&МВП as LIFNR_KEY,
     Страна,
-//     "Имя 1",
     "Vengroup 1",
     "Vengroup 2"
 FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
@@ -287,7 +279,6 @@ Call Timer;
 LOAD
     Поставщик&МВП as LIFNR_KEY,
     Страна,
-//     "Имя 1",
     "Vengroup 1",
     "Vengroup 2"
 FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]

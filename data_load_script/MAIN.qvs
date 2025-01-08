@@ -10,7 +10,7 @@ Let vtime = Time(Now());
 Sub Timer
 	
     vtime = Interval(Time(Now()) - vtime, 's');
-    Trace Прошло секунд:  $(vtime); // Используйте vtime вместо vtime1
+    Trace <---- Прошло секунд:  $(vtime) ---->; // Используйте vtime вместо vtime1
     Let vtime = Time(Now());
 End Sub;
 

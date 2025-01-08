@@ -68,13 +68,6 @@ FROM [lib://Data/!QVD DATA/QVD/SAP/LFB1.qvd](qvd)
 ;
 Call Timer;
 
-// MAPPING_ITEM:
-// MAPPING LOAD
-//     ZZ_DDS_ITEM,
-//     ITEM
-// FROM [lib://Data/!QVD DATA/QVD/SAP/FIRUC_CF_ITEM.qvd](qvd)
-// ;
-
 // маппинг для наименования клиента
 MAPPING_NAME:
 MAPPING LOAD

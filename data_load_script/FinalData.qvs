@@ -72,7 +72,6 @@ for each FLD in $(vFolders)
 LOAD
     Поставщик&МВП as LIFNR_KEY,
     Страна,
-//     "Имя 1",
     "Vengroup 1",
     "Vengroup 2"
 FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
@@ -86,7 +85,6 @@ Call Timer;
 LOAD
     Поставщик&МВП as LIFNR_KEY,
     Страна,
-//     "Имя 1",
     "Vengroup 1",
     "Vengroup 2"
 FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
