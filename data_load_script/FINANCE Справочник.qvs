@@ -1,0 +1,123 @@
+///$tab FINANCE Справочник
+// SET ErrorMode = 0;
+// if ScriptError>0 then
+
+// LIB CONNECT TO 'telegram bot (res_qlik.dev000)';
+// Let errortext = '$(vDocumentTitle)';
+// Let errorstype = '$(ScriptErrorList)';
+// RestConnectorMasterTable:
+// SQL SELECT 
+// 	"ok",
+// 	"__KEY_root"
+// FROM JSON (wrap on) "root" PK "__KEY_root"
+// WITH CONNECTION (
+// QUERY "text" "Ошибка при загрузке отчёта: $(vDocumentTitle)"
+// );
+// ;
+// DROP TABLE RestConnectorMasterTable;
+// exit script;
+// end if
+
+
+// $(Include=[lib://Data/Script/Format.qvs]);
+
+//1201, 1301, 1204, 1101, 1203, 1207, 1208, 4501, 1209, 1205, 1206, 4601, 4701, 4301, 4702
+Set vFolders ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc', '1DX-I7dh-5sHLNGtJKGBudMfhFvW86com', '18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4', '135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25', '1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu', '1BGhV3VIQwBC4lqFUey9TSub9gVciVohp', '1Cgc6CcISKn00qJoHptQs0SP95P3He3FI', '11DS1qYTGG0eEl1DWHqOh14qH0vJiEisY', '1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS', '1IWD6tsty-mUY9heBaLAdtymi074CnCrI', '15l0ROo6QuJybikVjUHHUeiJeWCzXqXz8', '1RiO0Y_OCmA9N50NbpSF8v1fYw5mbf1b7', '1YLA1M6BjOuqD891ytt8OGAMasCZztIvD', '1DfivG1zVUFVsHzIJ2xEvetrgUY8TaLqe', '1-3_BIjbQuX_M-r6RIR2grPF60TM_tMd0';
+//'135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25',,'1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu','18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4','1IWD6tsty-mUY9heBaLAdtymi074CnCrI', '15l0ROo6QuJybikVjUHHUeiJeWCzXqXz8','1BGhV3VIQwBC4lqFUey9TSub9gVciVohp','1Cgc6CcISKn00qJoHptQs0SP95P3He3FI','1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS','1DX-I7dh-5sHLNGtJKGBudMfhFvW86com','1DfivG1zVUFVsHzIJ2xEvetrgUY8TaLqe','1RiO0Y_OCmA9N50NbpSF8v1fYw5mbf1b7','1hOTWIGPqky6yB4rRsKf4h0iXYEUSafk7'
+
+Let vDay = MonthStart(AddMonths(Today(), -2));
+
+for each FLD in $(vFolders)
+[vendor_prisv]:
+LOAD
+    '000000'&МВП&Поставщик&Присвоение as vendor_prisv_key,
+    "Тип допрасхода"
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
+(ooxml, embedded labels, table is Пост_Присвоения);
+Next
+
+for each FLD in $(vFolders)
+[MVZ]:
+LOAD
+    '000000'&МВП&МВЗ&Операция&"Счет Главной Книги" as mvz_include_key,
+    Исключить
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/MVZ LIST.xlsx]
+(ooxml, embedded labels, table is МВЗ_исключения);
+Next
+
+for each FLD in $(vFolders)
+[DocName]:
+LOAD
+    "Вид документа"& '000000' & МВП as BLART_KEY,
+    "Название вида документа"
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/План Счетов.xlsx]
+(ooxml, embedded labels, table is Лист2);
+Next
+
+for each FLD in $(vFolders)
+[Clients]:
+LOAD
+    text(Дебитор & '000000' & "Сбытовая организация") as Clients_Key1,
+    "Канал сбыта",
+    Имя,
+    Страна,
+    Канал,
+    "Регион клиента"
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
+(ooxml, embedded labels, table is Клиенты);
+Next
+
+for each FLD in $(vFolders)
+[PEREDEL]:
+LOAD
+    "Вид заказа" as MANUFACTURINGORDERTYPE,
+    "Название вида заказа",
+    "Группа вида заказа"
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/MVZ LIST.xlsx]
+(ooxml, embedded labels, table is Вид_заказа);
+Next
+
+for each FLD in $(vFolders)
+[MVZ_List]:
+LOAD
+    Text("СЧЕТ МВЗ")& '000000' & МВП as RCNTR_KEY,
+    "НАЗВАНИЕ МВЗ",
+    Группа as [Группа МВЗ]
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/MVZ LIST.xlsx]
+(ooxml, embedded labels, table is Группа_МВЗ);
+Next
+
+for each FLD in $(vFolders)
+[Поставщики_EXCEL]:
+LOAD
+	Поставщик & '000000' & МВП as Client_Zakup_key,
+    Страна as Страна_Поставщика,
+    "Имя 1" as Имя_Поставщика,
+    "Vengroup 1" as Поставщики_Группа1,
+    "Vengroup 2" as Поставщики_Группа2
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
+(ooxml, embedded labels, table is Поставщики);
+Next
+
+[Vendors]:
+Mapping LOAD
+    vendor_prisv_key,
+    "Тип допрасхода"
+Resident vendor_prisv;
+
+[MVZ_Include]:
+Mapping Load
+	mvz_include_key,
+    Исключить
+Resident MVZ;
+
+Drop Table vendor_prisv;
+Drop Table MVZ;
+
+[Clients]:
+Mapping Load
+	VBELN,
+    KUNNR
+From [lib://Data/!QVD DATA/QVD/SAP/VBAK.qvd](qvd);
+
+// Exit Script;

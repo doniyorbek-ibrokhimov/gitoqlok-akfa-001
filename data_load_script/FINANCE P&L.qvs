@@ -1,0 +1,85 @@
+///$tab FINANCE P&L
+LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+
+Concatenate (Data)
+Load *,
+Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+'Чистая прибыль' as [Func_Sphere],
+'P&L' as AccType,
+'ValP' as RFAREA,
+replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП;
+
+SELECT
+	RBUKRS
+    FISCYEARPER
+	PRCTR
+    Sum(OSL) AS OSL2
+FROM ACDOCA
+WHERE RLDNR = '0L'
+	AND	RFAREA <> ' ' AND BUDAT <> '00000000'
+GROUP BY 
+RBUKRS
+FISCYEARPER
+PRCTR
+;
+
+
+
+
+Concatenate (Data)
+Load *,
+Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+'Валовая прибыль' as [Func_Sphere],
+'P&L' as AccType,
+'ValP' as RFAREA,
+replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП
+;
+
+SELECT
+	RBUKRS
+    FISCYEARPER
+	PRCTR
+    Sum(OSL) AS OSL2
+FROM ACDOCA
+WHERE 
+	((RLDNR = '0L' AND RFAREA <> ' ' AND (RACCT LIKE 'TP71%' OR RACCT LIKE 'TP61%')) OR
+    (RLDNR = '0L' AND (RFAREA = 'COS' OR RFAREA = 'REV') AND NOT (RACCT LIKE 'TP71%' OR RACCT LIKE 'TP61%')) OR
+    (RLDNR = '0L' AND RFAREA='OOI' and RACCT = '6109900000'))
+    AND BUDAT <> '00000000'
+GROUP BY 
+RBUKRS
+FISCYEARPER
+PRCTR
+;
+
+
+
+
+Concatenate (Data)
+Load *,
+Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+'Операционная прибыль' as [Func_Sphere],
+'P&L' as AccType,
+'ValP' as RFAREA,
+replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП
+;
+
+SELECT
+	RBUKRS
+    FISCYEARPER
+	PRCTR
+    Sum(OSL) AS OSL2
+FROM ACDOCA
+WHERE 
+	((RLDNR = '0L' AND RFAREA <> ' ' AND (RACCT LIKE 'TP71%' OR RACCT LIKE 'TP61%')) OR
+    (RLDNR = '0L' AND RFAREA IN ('COS', 'REV', 'SEL', 'ADM', 'OTH') AND NOT (RACCT LIKE 'TP71%' OR RACCT LIKE 'TP61%')) OR
+    (RLDNR = '0L' AND RFAREA='OOI' and RACCT = '6109900000'))
+    AND BUDAT <> '00000000'
+GROUP BY 
+RBUKRS
+FISCYEARPER
+PRCTR
+;

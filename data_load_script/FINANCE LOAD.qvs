@@ -1,0 +1,686 @@
+///$tab FINANCE LOAD
+LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+let vYearMonth = Date(AddMonths(MonthStart(Today()),-4), 'YYYY0MM');
+Set vPath = '[lib://Data Sandbox/!QVD DATA/Jaha_test/MS1100/PREMODEL/';
+
+Trace $(vYearMonth);
+
+// Exit Script;
+//BALANCE
+ACDOCA:
+Load 
+GJAHR,
+RBUKRS,
+RACCT,
+PRCTR,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'BALANCE' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND NOT (RACCT LIKE '88%' OR 
+	 RACCT LIKE 'TP25%' OR 
+     RACCT LIKE 'TP42%' OR 
+     RACCT LIKE '25%' OR
+     RACCT LIKE '27%' OR
+     RACCT LIKE '37%' OR
+     RACCT LIKE '51%' OR
+     RACCT LIKE '24%' OR
+     RACCT LIKE '34%' OR
+     RACCT LIKE '8%' OR
+     RACCT LIKE '54%' OR
+     RACCT =    '2200101300' OR
+     RACCT =    '3300101300' OR
+     RACCT =    '3900101000' OR
+     RACCT =    '5900000000' OR
+     RACCT =    '2190000000' OR
+     RACCT LIKE '6%' OR
+     RACCT LIKE '7%' OR
+     RACCT LIKE 'TP61%' OR
+     RACCT LIKE 'TP71%'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)        
+// )
+
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+;
+
+// Exit Script;
+
+//OTHER ACCS & 25
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+PPRCTR,
+PRCTR,
+BLART,
+RACCT,
+DRCRK,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'OTHER' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+    main~PPRCTR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+    main~FISCYEARPER
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND (RACCT LIKE 'TP25%' OR 
+     RACCT LIKE 'TP42%' OR 
+     RACCT LIKE '25%' OR
+     RACCT LIKE '27%' OR
+     RACCT LIKE '37%' OR
+     RACCT LIKE '51%' OR
+     RACCT LIKE '24%' OR
+     RACCT LIKE '34%' OR
+     RACCT LIKE '54%' OR
+     RACCT =    '2200101300' OR
+     RACCT =    '3300101300' OR
+     RACCT =    '3900101000' OR
+     RACCT =    '5900000000' OR
+     RACCT =    '2190000000'
+		)
+AND NOT (
+     RACCT =    '2400201000' OR
+     RACCT =    '3400200000'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+    main~PPRCTR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+	main~FISCYEARPER
+;
+
+
+//VAT
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+BELNR,
+PRCTR,
+BLART,
+RACCT,
+DRCRK,
+AWREF_REV,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'VAT' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+    main~FISCYEARPER
+    main~BELNR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+    main~AWREF_REV
+    main~WSL
+    main~OSL
+    main~MSL
+//     Sum(main~WSL) AS WSL
+//     Sum(main~OSL) AS OSL
+//     Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND (
+     RACCT =    '2400201000' OR
+     RACCT =    '3400200000'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+// GROUP BY 
+//     main~GJAHR
+//     main~RBUKRS
+//     main~FISCYEARPER
+//     main~BELNR
+//     main~PRCTR
+//     main~BLART
+//     main~RACCT
+//     main~AWREF_REV
+//     main~DRCRK
+;
+
+
+//SALES <> 1301
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+KUNNR,
+PPRCTR,
+BLART,
+' ' as KDAUF,
+' ' as KDPOS,
+PRCTR,
+MATNR,
+FKART,
+AUFNR,
+RACCT,
+RFAREA,
+DRCRK,
+RCNTR,
+AWTYP,
+WSL,
+OSL,
+MSL,
+AWREF_REV,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'SALES' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~KUNNR
+    main~PPRCTR
+    main~BLART
+//     main~KDAUF
+    main~PRCTR
+    main~MATNR
+    main~FKART
+    main~AUFNR
+    main~RACCT
+    main~RFAREA
+    main~DRCRK
+    main~RCNTR
+    main~AWTYP
+    main~AWREF_REV
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND PRCTR <> '0000001301'
+AND (
+     RACCT LIKE '6%' OR
+     RACCT LIKE '7%' OR
+     RACCT LIKE 'TP61%' OR
+     RACCT LIKE 'TP71%'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~KUNNR
+    main~PPRCTR
+    main~BLART
+//     main~KDAUF
+    main~PRCTR
+    main~MATNR
+    main~FKART
+    main~AUFNR
+    main~RACCT
+    main~RFAREA
+    main~DRCRK
+    main~RCNTR
+    main~AWTYP
+    main~AWREF_REV
+;
+
+
+
+//SALES 1301
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+KUNNR,
+PPRCTR,
+BLART,
+KDAUF,
+KDPOS,
+PRCTR,
+MATNR,
+FKART,
+AUFNR,
+RACCT,
+RFAREA,
+DRCRK,
+RCNTR,
+AWTYP,
+WSL,
+OSL,
+MSL,
+AWREF_REV,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'SALES' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~KUNNR
+    main~PPRCTR
+    main~BLART
+    main~KDAUF
+    main~KDPOS
+    main~PRCTR
+    main~MATNR
+    main~FKART
+    main~AUFNR
+    main~RACCT
+    main~RFAREA
+    main~DRCRK
+    main~RCNTR
+    main~AWTYP
+    main~AWREF_REV
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND PRCTR = '0000001301'
+AND (
+     RACCT LIKE '6%' OR
+     RACCT LIKE '7%' OR
+     RACCT LIKE 'TP61%' OR
+     RACCT LIKE 'TP71%'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~KUNNR
+    main~PPRCTR
+    main~BLART
+    main~KDAUF
+    main~KDPOS
+    main~PRCTR
+    main~MATNR
+    main~FKART
+    main~AUFNR
+    main~RACCT
+    main~RFAREA
+    main~DRCRK
+    main~RCNTR
+    main~AWTYP
+    main~AWREF_REV
+;
+
+
+//MVZ
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+PRCTR,
+RACCT,
+RFAREA,
+RCNTR,
+AWTYP,
+DRCRK,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'MVZ' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~PRCTR
+    main~RACCT
+    main~RFAREA
+    main~RCNTR
+    main~AWTYP
+    main~DRCRK
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND (
+     RACCT LIKE '8%'
+		)
+AND NOT (
+     RACCT LIKE '88%'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~PRCTR
+    main~RACCT
+    main~RFAREA
+    main~RCNTR
+    main~AWTYP
+    main~DRCRK
+;
+
+//88*
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+PPRCTR,
+PRCTR,
+BLART,
+RACCT,
+DRCRK,
+RFAREA,
+RCNTR,
+AWTYP,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'88' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~PPRCTR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+    main~RFAREA
+    main~RCNTR
+    main~AWTYP
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND (RACCT LIKE '88%')
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~PPRCTR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+    main~RFAREA
+    main~RCNTR
+    main~AWTYP
+;
+
+
+//ZAKUP
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+BELNR,
+RACCT,
+PRCTR,
+PPRCTR,
+LIFNR,
+ZUONR,
+MLPTYP,
+MLCATEG,
+RFAREA,
+AWTYP,
+MATNR,
+RUNIT,
+BLART,
+AWREF_REV,
+DRCRK,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'ZAKUP' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+    main~BELNR
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    main~PPRCTR
+    main~LIFNR
+    main~ZUONR
+    main~MLPTYP
+    main~MLCATEG
+    main~RFAREA
+	main~AWTYP
+    main~MATNR
+    main~RUNIT
+    main~BLART
+    main~DRCRK
+    main~AWREF_REV
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        zak~MLPTYP = 'BB'
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+    main~BELNR
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    main~PPRCTR
+    main~LIFNR
+    main~ZUONR
+    main~MLPTYP
+    main~MLCATEG
+    main~RFAREA
+	main~AWTYP
+    main~MATNR
+    main~RUNIT
+    main~BLART
+    main~AWREF_REV
+    main~DRCRK
+;
+
+
+
+//PEREOC
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+BELNR,
+RACCT,
+PRCTR,
+PPRCTR,
+RFAREA,
+AWTYP,
+RCNTR,
+BLART,
+DRCRK,
+GJAHR01,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'PEREOC' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+    main~BELNR
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    main~PPRCTR
+    main~RFAREA
+    main~AWTYP
+    main~RCNTR
+    main~BLART
+    main~DRCRK
+//     main~DOCLN
+    main~GJAHR AS Gasda
+//     main~WSL
+//     main~OSL
+//     main~MSL
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        zak~RACCT IN ('6300300000', '7300300000')
+)
+GROUP BY
+    main~GJAHR
+    main~RBUKRS
+    main~BELNR
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    main~PPRCTR
+    main~RFAREA
+    main~AWTYP
+    main~RCNTR
+    main~BLART
+    main~DRCRK
+;
+
+// ACDOCA_OLD:
+// Concatenate (ACDOCA)
+// Load *
+// From [lib://Data/!QVD DATA/QVD/SAP/ACDOCA_AUFNR.qvd](qvd)
+// Where FISCYEARPER < $(vYearMonth);
+
+Store ACDOCA into [lib://Data/!QVD DATA/QVD/SAP/ACDOCA_AUFNR.qvd](qvd);
+
+// Exit Script;

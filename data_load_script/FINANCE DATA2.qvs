@@ -1,0 +1,70 @@
+///$tab FINANCE DATA2
+Data:
+Load*
+	,LIFNR_ZAKUP&PRCTR as Client_Zakup_key
+	,ApplyMap('Vendors',PRCTR & LIFNR_ZAKUP & ZUONR_ZAKUP, 'Фактура') as "Тип допрасхода"
+//     ,Coalesce(KUNNR1, PPRCTR)&PRCTR as Clients_Key1
+	,Trim(text(if(KUNNR = ' ',Right(PPRCTR,4),KUNNR)&PRCTR)) as Clients_Key1
+    ,text(KURS_RACCT&PRCTR) as AccKey_KURS
+    ;
+Load *,
+	RBUKRS&BELNR&GJAHR as Dok_Key,
+//     RBUKRS&BELNR&GJAHR&GKONT as BMVP_Key,
+	Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+    text(RACCT&PRCTR) as AccKey,
+//     text(RBUKRS&ApplyMap('RACCT_MOVE', RBUKRS&BELNR&GJAHR,ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT,GKONT))) as AccKey_KURS,
+    If(Left(RACCT,4)='TP61','Доходы реализации',
+    If(Left(RACCT,4)='TP71','Себестоимость',
+    If(RFAREA='REV','Доходы реализации',
+    If(RFAREA='COS','Себестоимость',
+    If(RFAREA='PDN','Расходы производства',
+    If(RFAREA='OTH','Прочие расходы',
+    If(RFAREA='OOI' and RACCT = '6109900000','Доходы реализации',
+	If(RFAREA='OOI','Прочие доходы',
+    If(RFAREA='EXL','Курсовые разницы',
+    If(RFAREA='EXI','Курсовые разницы',
+    If(RFAREA='ADM','Админ расходы',
+    If(RFAREA='SEL','Расходы реализации',
+    If(RFAREA='CAPEX','Капрасходы',
+    If(RFAREA='FIN','Финансовые доходы',
+    If(RFAREA='FCO','Финансовые расходы',
+    If(RFAREA='SERVEX','Себес. услуг',
+    If(RFAREA='SERVIN','Себес. услуг',
+    If(RFAREA='SERVEX','Себес. услуг',
+    If(RFAREA='SERVEX','Себес. услуг',
+    If(RFAREA='IFA','Отклонения',
+    If(RFAREA='TAX','Налог на прибыль',
+    RFAREA))))))))))))))))))))) as [Func_Sphere],
+    if(Left(RACCT,2)='TP','МВП: партнер','Партнер') as [Partner],
+    if(RCNTR='1203942101',1,ApplyMap('MVZ_Include',PRCTR&RCNTR&AWTYP&RACCT,if(PPRCTR<>PRCTR or PPRCTR=' ',2,0))) as MVZInclude,
+    if(Match(left(RACCT,1),'6','7','8') or Match(RACCT,'TP61000000','TP71000000'),'P&L','Balance') as AccType,
+    ApplyMap('KURS_DOCS', RBUKRS&BELNR&GJAHR&PRCTR, '9999999999') as KURS_RACCT,
+    if(BLART = 'PE', OSL*-1, ApplyMap('KURS_SUMM', RBUKRS&BELNR&GJAHR&PRCTR, 0)) as KURS_SUMM,  //&PPRCTR
+    BLART&PRCTR as BLART_KEY,
+    RCNTR&PRCTR as RCNTR_KEY
+//     ,If(Left(RACCT, 4)='TP42' and PPRCTR = ' ', ApplyMap('88MVP', text(BELNR&WSL),PPRCTR), PPRCTR) as PPRCTR1
+//     ,if(Match(left(if(Left(GKONT,1)='0',ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT),GKONT),2),'22','32','23','33'),ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT),ApplyMap('RACCT_MOVE', RBUKRS&BELNR&GJAHR)) as KURS_RACCT
+//     ,ApplyMap('RACCT_MOVE', RBUKRS&BELNR&GJAHR,ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT,GKONT)) as KURS_RACCT,
+//     ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT,GKONT) as KURS_CLIENT
+	
+//     ,RBUKRS&ApplyMap('RACCT_MOVE', RBUKRS&BELNR&GJAHR,'') as AccKey_KURS
+    ,KUNNR&PRCTR as Clients_Key
+//     ,Interval(MakeDate(left(TIMESTAMP,4),Mid(TIMESTAMP,5,2),Mid(TIMESTAMP,7,2))-BUDAT,'D') as Old_Movements
+    ,if(LIFNR = ' ' and MLPTYP = 'BB' and MLCATEG = 'ZU', SubField(ApplyMap('ZAKUP_DOCS2', RBUKRS&BELNR&GJAHR, ' '), '|', 1), LIFNR) as LIFNR_ZAKUP
+    ,if(LIFNR = ' ' and MLPTYP = 'BB' and MLCATEG = 'ZU', SubField(ApplyMap('ZAKUP_DOCS2', RBUKRS&BELNR&GJAHR, ' '), '|', 2), ZUONR) as ZUONR_ZAKUP
+    ,if(Left(MATNR, 8) = '00000000', mid(MATNR,9), MATNR)&PRCTR as mat_group_key_acdoca,
+    replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+    if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП
+//     ,if(KUNNR = ' ' and KDAUF <> ' ', ApplyMap('Clients', KDAUF, ' '), KUNNR) as KUNNR1
+//     ,ApplyMap('STORNO', RBUKRS&AWREF&GJAHR, AWREF_REV) as Storno_doc
+Resident ACDOCA;
+
+
+// Old_Dates:
+// Concatenate(Data) Load
+// 	*,
+//     replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+//     if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/ACDOCA_MONTH_TP.qvd](qvd)
+// // Where RDAY < '$(vDay)'
+// ;

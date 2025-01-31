@@ -1,0 +1,43 @@
+///$tab FINANCE DATA
+[ZAKUP_DOCS]:
+Mapping Load
+	RBUKRS&BELNR&GJAHR as docID,
+    1
+Resident ACDOCA
+Where LIFNR = ' ' and MLPTYP = 'BB' and MLCATEG = 'ZU'
+;
+
+[ZAKUP_DOCS2]:
+Mapping Load 
+	k1,
+    k2
+Where LIFNR <> ' ' and ZAKUP_DOCS = 1;
+
+Load 
+	RBUKRS&BELNR&GJAHR as k1
+    ,LIFNR&'|'&ZUONR as k2
+	,ApplyMap('ZAKUP_DOCS', RBUKRS&BELNR&GJAHR) as ZAKUP_DOCS
+    ,LIFNR
+Resident ACDOCA
+;
+
+[KURS_SUMM]:
+Mapping Load
+	RBUKRS&BELNR&GJAHR&PRCTR,
+//     &PPRCTR,
+//     OSL
+    Sum(OSL)
+Resident ACDOCA
+Where Match(RACCT, '6300300000','7300300000') AND Not IsNull(GJAHR01)
+Group By RBUKRS, BELNR, GJAHR, PRCTR //, PPRCTR
+;
+
+KURS_DOCS:
+Mapping 
+Load kurs_key,
+	RACCT;
+NoConcatenate Load 
+Distinct RBUKRS&BELNR&GJAHR&PRCTR as kurs_key,
+RACCT
+Resident ACDOCA
+Where not IsNull(GJAHR01) and not Match(RACCT, '6300300000','7300300000');

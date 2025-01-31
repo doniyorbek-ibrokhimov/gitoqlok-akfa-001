@@ -1,0 +1,39 @@
+///$tab Раздел
+// LOAD
+//     БЕ,
+//     "Основной счет",
+//     "Краткий текст",
+//     "Подробный текст ОСч",
+//     "ГРУППА 1",
+//     "ГРУППА 2",
+//     "ГРУППА 3",
+//     "ГРУППА 4",
+//     "ГРУППА 5 (Для МВЗ)"
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001) (res_qlik.dev000)/1w7Yx-8NWMbAPRy1FuxIlLVjL6YmeYq22/План Счетов.xlsx]
+// (ooxml, embedded labels, table is Лист1);
+
+// [Поставщики_EXCEL]:
+// LOAD
+//     Поставщик,
+//     МВП,
+//     Страна,
+//     "Имя 1",
+//     "Vengroup 1",
+//     "Vengroup 2"
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1w7Yx-8NWMbAPRy1FuxIlLVjL6YmeYq22/Контрагенты.xlsx]
+// (ooxml, embedded labels, table is Поставщики);
+
+// Exit Script;
+
+// [Mat_Groups]:
+// LOAD
+//   Материал & '000000' & Завод as mat_group_key,
+//   Имя as [Имя Материала],
+//   "Группа 1" as [Группа Материала],
+//   "Группа 2" as [Группа Материала для анализа],
+//   "Группа 3",
+//   "Группа 4",
+//   "Уд. Вес" as [Удельный вес],
+//   "Балансовая группа" as [Балансовая группа материала] 
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1Lwlh1rGFx1kFF4_rtI5SdsU-_12DWY91/1201.xlsx]
+// (ooxml, embedded labels, table is [Группы материалов]);

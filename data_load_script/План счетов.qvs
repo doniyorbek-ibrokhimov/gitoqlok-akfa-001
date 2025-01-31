@@ -1,0 +1,44 @@
+///$tab План счетов
+Set WerkList = '1203','1204','1205','1206','1207','1208','1209','4301','4601','1301';
+
+// Set vFolders ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc';
+//'135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25',,'1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu','18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4','1IWD6tsty-mUY9heBaLAdtymi074CnCrI', '15l0ROo6QuJybikVjUHHUeiJeWCzXqXz8','1BGhV3VIQwBC4lqFUey9TSub9gVciVohp','1Cgc6CcISKn00qJoHptQs0SP95P3He3FI','1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS','1DX-I7dh-5sHLNGtJKGBudMfhFvW86com','1DfivG1zVUFVsHzIJ2xEvetrgUY8TaLqe','1RiO0Y_OCmA9N50NbpSF8v1fYw5mbf1b7','1hOTWIGPqky6yB4rRsKf4h0iXYEUSafk7'
+
+for each FLD in $(vFolders)
+  [Acc_Names]:
+	LOAD
+      text("Основной счет") & '000000' & МВП as AccKey,
+      "Основной счет",
+      "Подробный текст ОСч",
+      "ГРУППА 1",
+      "ГРУППА 2",
+      "ГРУППА 3",
+      "ГРУППА 4",
+      "ГРУППА 5 (Для МВЗ)"
+	FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/План Счетов.xlsx]
+  (ooxml, embedded labels, table is Лист1);
+Next
+
+[KURS_DIFF_Names]:
+LOAD
+	AccKey as AccKey_KURS,
+    "Основной счет" as "Основной счет_КР",
+    "Подробный текст ОСч" as "Подробный текст ОСч_КР",
+    "ГРУППА 1" as "ГРУППА 1_КР",
+    "ГРУППА 2" as "ГРУППА 2_КР",
+    "ГРУППА 3" as "ГРУППА 3_КР",
+    "ГРУППА 4" as "ГРУППА 4_КР",
+    "ГРУППА 5 (Для МВЗ)" as "ГРУППА 5 (Для МВЗ)_КР"
+Resident Acc_Names;
+
+[KURS_DIFF_Cost_Num]:
+LOAD
+	AccKey as AccKey_Cost_Num,
+    "Основной счет" as "Основной счет_КР_Cost_Num",
+    "Подробный текст ОСч" as "Подробный текст ОСч_КР_Cost_Num",
+    "ГРУППА 1" as "ГРУППА 1_КР_Cost_Num",
+    "ГРУППА 2" as "ГРУППА 2_КР_Cost_Num",
+    "ГРУППА 3" as "ГРУППА 3_КР_Cost_Num",
+    "ГРУППА 4" as "ГРУППА 4_КР_Cost_Num",
+    "ГРУППА 5 (Для МВЗ)" as "ГРУППА 5 (Для МВЗ)_КР_Cost_Num"
+Resident Acc_Names;

@@ -1,0 +1,52 @@
+///$tab FINANCE CALENDAR
+MinMaxDate:
+LOAD  
+  MIN(RDAY) AS MinDate, 
+  MAX(RDAY) AS MaxDate;  
+
+LOAD FIELDVALUE('RDAY',ITERNO()) AS RDAY  
+AUTOGENERATE(1)  
+WHILE NOT ISNULL(FIELDVALUE('RDAY',ITERNO()));
+
+Let vMinDate=peek('MinDate',-1,'MinMaxDate');
+Let vMaxDate=peek('MaxDate',-1,'MinMaxDate');
+Drop Table MinMaxDate;
+
+RollingData:
+Load
+'$(vMinDate)'+(Iterno()-1) AS RDAY
+Autogenerate 1
+While '$(vMinDate)'+(Iterno()-1) <= '$(vMaxDate)';
+
+
+LEFT JOIN (RollingData)
+LOAD
+RDAY as RDAY_DATE
+RESIDENT RollingData;
+
+INNER JOIN (RollingData) 
+LOAD *
+RESIDENT RollingData
+WHERE RDAY<=RDAY_DATE ;
+
+Calendar:
+NoConcatenate Load
+  RDAY,
+  Date(RDAY_DATE) as Дата_Н,
+  Day(RDAY_DATE) as День,
+  Date(RDAY_DATE) as Дата,
+  Num(MonthName(RDAY_DATE)) as [_Месяц-Год-Num],
+  Dual(Year(RDAY_DATE), YearStart(RDAY_DATE)) AS [Год],
+  Dual('К'&Num(Ceil(Num(Month(RDAY_DATE))/3)),Num(Ceil(NUM(Month(RDAY_DATE))/3),00)) AS [Квартал],
+  Dual('П'&Num(Ceil(Num(Month(RDAY_DATE))/6)),Num(Ceil(NUM(Month(RDAY_DATE))/6),00)) AS [Полугодие],
+  Dual(Year(RDAY_DATE)&'-К'&Num(Ceil(Num(Month(RDAY_DATE))/3)),QuarterStart(RDAY_DATE)) AS [Год-Квартал],
+  WeekDay(RDAY_DATE) AS [День Недели],
+  WeekName(RDAY_DATE) AS [Год-Неделя],
+  Month(RDAY_DATE) AS [Месяц] ,
+  Dual(Year(RDAY_DATE)&'-'&Month(RDAY_DATE), monthstart(RDAY_DATE)) AS [Год-Месяц],
+  Dual('Н'&Num(Week(RDAY_DATE),00), Num(Week(RDAY_DATE),00)) AS [Неделя],
+  if(RDAY=RDAY_DATE,1,0) as FlagD
+  
+resident RollingData;
+
+Drop table RollingData;

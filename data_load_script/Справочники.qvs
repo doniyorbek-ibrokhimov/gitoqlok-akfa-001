@@ -1,0 +1,314 @@
+///$tab Справочники
+Set vPath = '[lib://Data Sandbox/!QVD DATA/Jaha_test/MS1100/PREMODEL/Google';
+
+// Store vendor_prisv     into $(vPath)/vendor_prisv.qvd](qvd);
+// Store MVZ              into $(vPath)/MVZ.qvd](qvd);
+// Store DocName          into $(vPath)/DocName.qvd](qvd);
+// Store Clients          into $(vPath)/Clients.qvd](qvd);
+// Store PEREDEL          into $(vPath)/PEREDEL.qvd](qvd);
+// Store MVZ_List         into $(vPath)/MVZ_List.qvd](qvd);
+// Store Поставщики_EXCEL into $(vPath)/Поставщики_EXCEL.qvd](qvd);
+// Store Mat_Groups       into $(vPath)/Mat_Groups.qvd](qvd);
+// Store Mat_prod_groups  into $(vPath)/Mat_prod_groups.qvd](qvd);
+// Store Acc_Names        into $(vPath)/Acc_Names.qvd](qvd);
+// Store АЕИ_Справочник   into $(vPath)/АЕИ_Справочник.qvd](qvd);
+
+[DocName]:
+LOAD
+    BLART_KEY,
+    "Название вида документа"
+FROM $(vPath)/DocName.qvd](qvd);
+
+
+
+[Clients]:
+LOAD
+    Clients_Key1,
+    "Канал сбыта",
+    Имя,
+    Страна,
+    Канал,
+    "Регион клиента"
+FROM $(vPath)/Clients.qvd](qvd);
+
+[PEREDEL]:
+LOAD
+    MANUFACTURINGORDERTYPE,
+    "Название вида заказа",
+    "Группа вида заказа"
+FROM $(vPath)/PEREDEL.qvd](qvd);
+
+
+[MVZ_List]:
+LOAD
+    RCNTR_KEY,
+    "НАЗВАНИЕ МВЗ",
+    [Группа МВЗ]
+FROM $(vPath)/MVZ_List.qvd](qvd);
+
+
+[Поставщики_EXCEL]:
+LOAD
+	Client_Zakup_key,
+    Страна_Поставщика,
+    Имя_Поставщика,
+    Поставщики_Группа1,
+    Поставщики_Группа2
+FROM $(vPath)/Поставщики_EXCEL.qvd](qvd);
+
+[Vendors]:
+Mapping LOAD
+    vendor_prisv_key,
+    "Тип допрасхода"
+From $(vPath)/vendor_prisv.qvd](qvd);
+
+[MVZ_Include]:
+Mapping Load
+	mvz_include_key,
+    Исключить
+From $(vPath)/MVZ.qvd](qvd);
+
+
+[Clients]:
+Mapping Load
+	VBELN,
+    KUNNR
+From [lib://Data/!QVD DATA/QVD/SAP/VBAK.qvd](qvd);
+
+Mat_prod_groups:
+Load
+  cost_group_key,
+  [Материал затрат],
+  [Группа затрат],
+  [Группа для анализа затрат],
+  "Группа 3 Затрат",
+  "Группа 4 Затрат",
+  "Группа 5 Затрат",
+  [Уд. Вес затрат],
+  [Передел ГП затрат] 
+From $(vPath)/Mat_prod_groups.qvd](qvd);
+
+
+[Mat_Groups]:
+LOAD
+  mat_group_key,
+  [Имя Материала],
+  [Группа Материала],
+  [Группа Материала для анализа],
+  "Группа 3",
+  "Группа 4",
+  "Группа 5",
+  [Удельный вес],
+  [Балансовая группа материала] 
+FROM $(vPath)/Mat_Groups.qvd](qvd);
+
+
+[Mat_Groups_ACDOCA]:
+LOAD
+  mat_group_key as mat_group_key_acdoca,
+  [Имя Материала] as [Имя Материала acdoca],
+  [Группа Материала] as [Группа Материала acdoca],
+  [Группа Материала для анализа] as [Группа Материала для анализа acdoca],
+  "Группа 3" as "Группа 3 acdoca",
+  "Группа 4" as "Группа 4 acdoca",
+  "Группа 5" as "Группа 5 acdoca",
+  [Удельный вес] as [Удельный вес acdoca],
+  [Удельный вес] as UMREN_UMREZ_7,
+  [Балансовая группа материала] as [Балансовая группа материала acdoca] 
+Resident Mat_Groups;
+
+
+
+[Mat_CKM3N_groups]:
+LOAD
+  mat_group_key as ZCO_MAT_KEY,
+  [Имя Материала] as [Имя Материала CKM3N],
+  [Группа Материала] as [Группа Материала CKM3N],
+  [Группа Материала для анализа] as [Группа Материала для анализа CKM3N],
+  "Группа 3" as "Группа 3 CKM3N",
+  "Группа 4" as "Группа 4 CKM3N",
+  "Группа 5" as "Группа 5 CKM3N",
+  [Удельный вес] as [Удельный вес CKM3N],
+  [Удельный вес] as UMREN_UMREZ_MATERIAL_7,
+  [Балансовая группа материала] as [Балансовая группа материала CKM3N] 
+Resident Mat_Groups;
+
+
+[Acc_Names]:
+LOAD
+  AccKey,
+  "Основной счет",
+  "Подробный текст ОСч",
+  "ГРУППА 1",
+  "ГРУППА 2",
+  "ГРУППА 3",
+  "ГРУППА 4",
+  "ГРУППА 5 (Для МВЗ)"
+FROM $(vPath)/Acc_Names.qvd](qvd);
+
+
+[KURS_DIFF_Names]:
+LOAD
+	AccKey as AccKey_KURS,
+    "Основной счет" as "Основной счет_КР",
+    "Подробный текст ОСч" as "Подробный текст ОСч_КР",
+    "ГРУППА 1" as "ГРУППА 1_КР",
+    "ГРУППА 2" as "ГРУППА 2_КР",
+    "ГРУППА 3" as "ГРУППА 3_КР",
+    "ГРУППА 4" as "ГРУППА 4_КР",
+    "ГРУППА 5 (Для МВЗ)" as "ГРУППА 5 (Для МВЗ)_КР"
+Resident Acc_Names;
+
+[KURS_DIFF_Cost_Num]:
+LOAD
+	AccKey as AccKey_Cost_Num,
+    "Основной счет" as "Основной счет_КР_Cost_Num",
+    "Подробный текст ОСч" as "Подробный текст ОСч_КР_Cost_Num",
+    "ГРУППА 1" as "ГРУППА 1_КР_Cost_Num",
+    "ГРУППА 2" as "ГРУППА 2_КР_Cost_Num",
+    "ГРУППА 3" as "ГРУППА 3_КР_Cost_Num",
+    "ГРУППА 4" as "ГРУППА 4_КР_Cost_Num",
+    "ГРУППА 5 (Для МВЗ)" as "ГРУППА 5 (Для МВЗ)_КР_Cost_Num"
+Resident Acc_Names;
+
+
+
+[АЕИ_Справочник]:
+LOAD
+    MATNR,
+    UMREN_UMREZ,
+    АЕИ_0,
+    АЕИ_1,
+    АЕИ_2,
+    АЕИ_3,
+    АЕИ_4,
+    АЕИ_5,
+	АЕИ_6,
+    UMREN_UMREZ_0,
+    UMREN_UMREZ_1,
+    UMREN_UMREZ_2,
+    UMREN_UMREZ_3,
+    UMREN_UMREZ_4,
+    UMREN_UMREZ_5,
+    UMREN_UMREZ_6
+FROM $(vPath)/АЕИ_Справочник.qvd](qvd);
+;
+
+[АЕИ_Справочник_ГП]:
+LOAD
+    MATNR as Prod_Material,
+    UMREN_UMREZ as UMREN_UMREZ_Prod_Material,
+    АЕИ_0 as АЕИ_Prod_Material_0,
+    АЕИ_1 as АЕИ_Prod_Material_1,
+    АЕИ_2 as АЕИ_Prod_Material_2,
+    АЕИ_3 as АЕИ_Prod_Material_3,
+    АЕИ_4 as АЕИ_Prod_Material_4,
+    АЕИ_5 as АЕИ_Prod_Material_5,
+    АЕИ_6 as АЕИ_Prod_Material_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_Prod_Material_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_Prod_Material_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_Prod_Material_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_Prod_Material_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_Prod_Material_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_Prod_Material_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_Prod_Material_6	
+Resident АЕИ_Справочник
+;
+
+[АЕИ_Справочник_Cost]:
+LOAD
+    MATNR as Cost_Material,
+    UMREN_UMREZ as UMREN_UMREZ_Cost_Material,
+    АЕИ_0 as АЕИ_Cost_Material_0,
+    АЕИ_1 as АЕИ_Cost_Material_1,
+    АЕИ_2 as АЕИ_Cost_Material_2,
+    АЕИ_3 as АЕИ_Cost_Material_3,
+    АЕИ_4 as АЕИ_Cost_Material_4,
+    АЕИ_5 as АЕИ_Cost_Material_5,
+    АЕИ_6 as АЕИ_Cost_Material_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_Cost_Material_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_Cost_Material_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_Cost_Material_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_Cost_Material_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_Cost_Material_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_Cost_Material_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_Cost_Material_6
+Resident АЕИ_Справочник
+;
+
+[АЕИ_Справочник_ZCO]:
+LOAD
+    MATNR as MATERIAL,
+    UMREN_UMREZ as UMREN_UMREZ_MATERIAL,
+    АЕИ_0 as АЕИ_MATERIAL_0,
+    АЕИ_1 as АЕИ_MATERIAL_1,
+    АЕИ_2 as АЕИ_MATERIAL_2,
+    АЕИ_3 as АЕИ_MATERIAL_3,
+    АЕИ_4 as АЕИ_MATERIAL_4,
+    АЕИ_5 as АЕИ_MATERIAL_5,
+    АЕИ_6 as АЕИ_MATERIAL_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_MATERIAL_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_MATERIAL_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_MATERIAL_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_MATERIAL_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_MATERIAL_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_MATERIAL_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_MATERIAL_6
+Resident АЕИ_Справочник
+;
+
+
+
+
+
+[Vid_Dvij]:
+Load * Inline [
+BWART, BWART_NAME
+101, Выпуск
+102, Выпуск
+531, Тех. Отход
+532, Тех. Отход
+261, Затраты
+262, Затраты
+'aaa', Расходы
+];
+
+// Drop Table IPPMFGORDER, MATDOC;
+
+[CATEGORY_TEXT]:
+Load * Inline [
+CATEGORY, CATEGORY_TEXT
+AB, Начальные запасы
+PC, Изменения цен
+ZU, Поступления
+VP, Прочие увеличения/уменьшения запасов материалов
+VN, Потребление
+EB, Итоговое сальдо
+NV, Не распределено (устарело)
+KB, Кумулятивный запас
+NC, Не перерассчитано
+ND, Не распределено
+
+];
+
+[TYPEPROC_TEXT]:
+Load * Inline [
+PROCESSTYPE, PROCESSTYPE_TEXT
+VUBS, Проводка переноса особого запаса
+VU, Перемещение запаса
+VP, Проект
+VL, Обработка давальческого материала
+VKA, Заказ клиента
+VK, Место возникновения затрат
+VF, Производство
+VEAU, Потребление для 1-уровневых заказов
+V+, Потребление
+DC, Прочие(проверка)
+BUBS, Проводка переноса особого запаса
+BU, Перемещение запаса
+BL, Обработка давальческого материала
+BF, Производство
+BB, Заказ на поставку
+B+, Заготовка
+' ', Начало
+];

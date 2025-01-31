@@ -1,0 +1,38 @@
+///$tab VAT
+Let vDateMonth = Date(AddMonths(MonthStart(Today()),-3), 'YYYYMMDD');
+
+
+FIKZD_REGINV_IN:
+Load
+	BUKRS&INV_BELNR&GJAHR as Dok_Key
+    ,LIFNR as Поставщик_НДС
+    ,PARTN_NAME as Имя_Поставщика_НДС;
+Select
+	BUKRS
+    ,GJAHR
+    ,INV_BELNR
+    ,LIFNR
+    ,PARTN_NAME
+From FIKZD_REGINV_IN
+Where BUKRS <> '1400' and BUKRS <> '1000' and BUKRS <> '9000'
+// DATE_REG >= '$(vDateMonth)' and 
+
+;
+
+
+FIKZD_REGINV_OUT:
+Load
+	BUKRS&if(INVADD_BELNR=' ',INV_BELNR, INVADD_BELNR)&GJAHR as Dok_Key
+    ,KUNNR as Дебитор_НДС
+    ,PARTN_NAME as Имя_Дебитора_НДС;
+Select
+	BUKRS
+    ,GJAHR
+    ,INV_BELNR
+    ,KUNNR
+    ,PARTN_NAME
+    ,INVADD_BELNR
+From FIKZD_REGINV_OUT AS MAIN
+Where BUKRS <> '1400' and BUKRS <> '1000' and BUKRS <> '9000'
+// DATE_REG >= '$(vDateMonth)'
+;

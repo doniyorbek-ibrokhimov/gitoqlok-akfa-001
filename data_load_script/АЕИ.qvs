@@ -1,0 +1,90 @@
+///$tab АЕИ
+[АЕИ_Справочник]:
+LOAD
+    MATNR,
+    UMREN_UMREZ,
+    АЕИ_0,
+    АЕИ_1,
+    АЕИ_2,
+    АЕИ_3,
+    АЕИ_4,
+    UMREN_UMREZ_0,
+    UMREN_UMREZ_1,
+    UMREN_UMREZ_2,
+    UMREN_UMREZ_3,
+    UMREN_UMREZ_4
+FROM [lib://Data/!QVD DATA/APP_006/PreModel/АЕИ_Справочник.qvd](qvd)
+;
+
+MARA:
+Left Join (АЕИ_Справочник) LOAD
+    MATNR
+	,NTGEW as UMREN_UMREZ_5
+    ,BRGEW as UMREN_UMREZ_6
+    ,'KG' as АЕИ_5
+    ,'KG' as АЕИ_6
+FROM [lib://Data/!QVD DATA/QVD/SAP/MARA.qvd]
+(qvd);
+
+[АЕИ_Справочник_ГП]:
+LOAD
+    MATNR as Prod_Material,
+    UMREN_UMREZ as UMREN_UMREZ_Prod_Material,
+    АЕИ_0 as АЕИ_Prod_Material_0,
+    АЕИ_1 as АЕИ_Prod_Material_1,
+    АЕИ_2 as АЕИ_Prod_Material_2,
+    АЕИ_3 as АЕИ_Prod_Material_3,
+    АЕИ_4 as АЕИ_Prod_Material_4,
+    АЕИ_5 as АЕИ_Prod_Material_5,
+    АЕИ_6 as АЕИ_Prod_Material_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_Prod_Material_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_Prod_Material_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_Prod_Material_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_Prod_Material_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_Prod_Material_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_Prod_Material_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_Prod_Material_6	
+Resident АЕИ_Справочник
+;
+
+[АЕИ_Справочник_Cost]:
+LOAD
+    MATNR as Cost_Material,
+    UMREN_UMREZ as UMREN_UMREZ_Cost_Material,
+    АЕИ_0 as АЕИ_Cost_Material_0,
+    АЕИ_1 as АЕИ_Cost_Material_1,
+    АЕИ_2 as АЕИ_Cost_Material_2,
+    АЕИ_3 as АЕИ_Cost_Material_3,
+    АЕИ_4 as АЕИ_Cost_Material_4,
+    АЕИ_5 as АЕИ_Cost_Material_5,
+    АЕИ_6 as АЕИ_Cost_Material_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_Cost_Material_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_Cost_Material_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_Cost_Material_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_Cost_Material_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_Cost_Material_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_Cost_Material_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_Cost_Material_6
+Resident АЕИ_Справочник
+;
+
+[АЕИ_Справочник_ZCO]:
+LOAD
+    MATNR as MATERIAL,
+    UMREN_UMREZ as UMREN_UMREZ_MATERIAL,
+    АЕИ_0 as АЕИ_MATERIAL_0,
+    АЕИ_1 as АЕИ_MATERIAL_1,
+    АЕИ_2 as АЕИ_MATERIAL_2,
+    АЕИ_3 as АЕИ_MATERIAL_3,
+    АЕИ_4 as АЕИ_MATERIAL_4,
+    АЕИ_5 as АЕИ_MATERIAL_5,
+    АЕИ_6 as АЕИ_MATERIAL_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_MATERIAL_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_MATERIAL_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_MATERIAL_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_MATERIAL_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_MATERIAL_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_MATERIAL_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_MATERIAL_6
+Resident АЕИ_Справочник
+;

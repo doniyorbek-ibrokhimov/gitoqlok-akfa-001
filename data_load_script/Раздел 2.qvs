@@ -1,0 +1,91 @@
+///$tab Раздел 2
+// tmp:
+// Load * Inline [
+// Дата
+// 01.01.2024
+// 30.03.2024
+// ];
+
+Календарь:
+load	
+date(MinDate+iterno()-1) as [День]
+while date(MinDate+iterno()-1)<=MaxDate;
+
+load
+date(min(FieldValue('Дата',recno()))) as MinDate,
+date(max(FieldValue('Дата',recno()))) as MaxDate
+AutoGenerate FieldValueCount('Дата');
+
+left join load День as Дата Resident Календарь where Exists(Дата,День);
+
+Календарь_НИ:
+load
+День,
+Дата,
+'Без накопления' as Накопительный_итог
+Resident Календарь where Дата=День;
+
+load
+День,
+Дата,
+'По неделям' as Накопительный_итог
+Resident Календарь where Дата<=День and Week(Дата)=Week(День) and year(Дата)=year(День);
+
+load
+День,
+Дата,
+'По месяцам' as Накопительный_итог
+Resident Календарь where Дата<=День and monthstart(Дата)=monthstart(День);
+
+load
+День,
+Дата,
+'По кварталам' as Накопительный_итог
+Resident Календарь where Дата<=День and quarterstart(Дата)=quarterstart(День);
+
+load
+День,
+Дата,
+'По годам' as Накопительный_итог
+Resident Календарь where Дата<=День and year(Дата)=year(День);
+
+Concatenate load
+День,
+Дата,
+День-Дата as AsOfDate,
+(year(День)*12+month(День))-(year(Дата)*12+month(Дата)) as AsOfMonth,
+(year(День)*4+ceil(month(День)/3))-(year(Дата)*4+ceil(month(Дата)/3)) as AsOfQuarter,
+year(День)-year(Дата) as AsOfYear,
+'Полный' as Накопительный_итог
+Resident Календарь where Дата<=День;
+
+drop table Календарь;
+
+left join (Календарь_НИ) load distinct
+
+День,
+//с привязкой к году
+date(monthstart(День),'MMMM YY') as МесяцГод,
+date(weekstart(День)) as НеделяГод,
+QuarterName(День) as КварталГод,
+date(YearStart(День),'YYYY') as Год,
+
+//без привязки к году
+month(День) as Месяц,
+Week(День) as Неделя,
+'Q' & ceil(MONTH(День)/3) as Квартал,
+
+//флаги
+InYearToDate([День],today(),0) as InYTD,
+year(День)-year(today()) as Лет_Назад,
+(year([День])*12+month(День))-(year(today())*12+month(today())) as Месяцев_назад
+Resident Календарь_НИ;
+
+
+[AxisViz]: 
+DECLARE FIELD DEFINITION
+	FIELDS   
+    Dual(Year($1), YearStart($1)) AS [Year] Tagged ('$axis','$hidden'),
+	date(monthstart($1),'MMM') as Месяц Tagged ('$axis','$hidden'),
+    date($1,'D') as День Tagged ('$axis','$hidden');
+DERIVE FIELDS FROM FIELDS [День],[МесяцГод],Дата USING [AxisViz];

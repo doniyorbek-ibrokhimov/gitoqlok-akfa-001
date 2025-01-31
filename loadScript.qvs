@@ -1,262 +1,2421 @@
-///$tab MAIN
-$(Include=[lib://Data/Script/SA.qvs]);
-$(Include=[lib://Data/Script/Format.qvs]);
+///$tab FINANCE Справочник
+// SET ErrorMode = 0;
+// if ScriptError>0 then
 
-Let vDate=Date(Today());
-
-Trace vDate=$(vDate);
-
-Let vtime = Time(Now());
-Sub Timer
-	
-    vtime = Interval(Time(Now()) - vtime, 's');
-    Trace <---- Прошло секунд:  $(vtime) ---->; // Используйте vtime вместо vtime1
-    Let vtime = Time(Now());
-End Sub;
-
-[KURS_DIFF]:
-Mapping Load
-    RBUKRS&BELNR&GJAHR as %KEY,
-    1 as %VALUE
-From [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
-Where Match(left(RACCT,5),'63003','73003')
-and RLDNR = '0L';
-Call Timer;
-///$tab VAR
-Set vConstructor=WildMatch('|'&Concat(_Конструктор_Изм,'|')&'|','*|$1|*')=1;
-Set vConstructor_Mesures=WildMatch('|'&Concat(_Конструктор_Мер_Num,'|')&'|','*|$1|*')=1;
-Set vMeasures=1;
-Set vCurrency = 'ZUDMVP';
-Set vRevaluation = 'Переоценка';
-Set vSortBy = 8;
-SET HidePrefix = '_';
+// LIB CONNECT TO 'telegram bot (res_qlik.dev000)';
+// Let errortext = '$(vDocumentTitle)';
+// Let errorstype = '$(ScriptErrorList)';
+// RestConnectorMasterTable:
+// SQL SELECT 
+// 	"ok",
+// 	"__KEY_root"
+// FROM JSON (wrap on) "root" PK "__KEY_root"
+// WITH CONNECTION (
+// QUERY "text" "Ошибка при загрузке отчёта: $(vDocumentTitle)"
+// );
+// ;
+// DROP TABLE RestConnectorMasterTable;
+// exit script;
+// end if
 
 
-Конструктор_Измерений:
-Load
-Dual(_Конструктор,Порядок) as _Конструктор,
-Порядок as _Конструктор_Изм
-;
-Load*inline
+// $(Include=[lib://Data/Script/Format.qvs]);
 
-[_Конструктор,Порядок
-Канал закупа,1
-Поставщик,2
-Код поставщика,3
-Вид документа,4
-Документ,5
-Контракт,6
-Валюта,7
-МВП,8
-Дата проводки,9
-Группа материлов,10
-Внешний номер инвойса,11
-Текст номера документа,12
-Страна, 13
-Канал, 14
-Канал 2, 15
-]
-;
+//1201, 1301, 1204, 1101, 1203, 1207, 1208, 4501, 1209, 1205, 1206, 4601, 4701, 4301, 4702
+Set vFolders ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc', '1DX-I7dh-5sHLNGtJKGBudMfhFvW86com', '18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4', '135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25', '1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu', '1BGhV3VIQwBC4lqFUey9TSub9gVciVohp', '1Cgc6CcISKn00qJoHptQs0SP95P3He3FI', '11DS1qYTGG0eEl1DWHqOh14qH0vJiEisY', '1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS', '1IWD6tsty-mUY9heBaLAdtymi074CnCrI', '15l0ROo6QuJybikVjUHHUeiJeWCzXqXz8', '1RiO0Y_OCmA9N50NbpSF8v1fYw5mbf1b7', '1YLA1M6BjOuqD891ytt8OGAMasCZztIvD', '1DfivG1zVUFVsHzIJ2xEvetrgUY8TaLqe', '1-3_BIjbQuX_M-r6RIR2grPF60TM_tMd0';
+//'135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25',,'1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu','18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4','1IWD6tsty-mUY9heBaLAdtymi074CnCrI', '15l0ROo6QuJybikVjUHHUeiJeWCzXqXz8','1BGhV3VIQwBC4lqFUey9TSub9gVciVohp','1Cgc6CcISKn00qJoHptQs0SP95P3He3FI','1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS','1DX-I7dh-5sHLNGtJKGBudMfhFvW86com','1DfivG1zVUFVsHzIJ2xEvetrgUY8TaLqe','1RiO0Y_OCmA9N50NbpSF8v1fYw5mbf1b7','1hOTWIGPqky6yB4rRsKf4h0iXYEUSafk7'
 
-Call Timer;
-///$tab Mapping
-[MATERIALS_SUPPLY]:
-MAPPING LOAD
-    "SAP код материала" as MATNR,
-    Группировка
-    
-FROM [lib://Data/!QVD DATA/QVD/GD/MATERIALS_SUPPLY.qvd](qvd);
-Call Timer;
-
-// маппинг для наименования клиента
-MAPPING_NAME:
-MAPPING LOAD
-    LIFNR,
-    NAME1 as NAME
-FROM [lib://Data/!QVD DATA/QVD/SAP/LFA1.qvd](qvd)
-Where LIFNR<>' '
-;
-Call Timer;
-
-[Справочник BSART]:
-Mapping
-LOAD BSART as %KEY,
-     BATXT as %VALUE;
-LOAD * inline [
-BSART|BATXT
-ZIMP|Импорт
-ZLOC|Местный
-ZSRV|Услуги
-XLOC|Местный
-XZIMP|Импорт
-] (delimiter is '|');
-Call Timer;
-
-[EKKO_BSART]:
-Mapping Load
-LIFNR,
-BSART
-FROM [lib://Data/!QVD DATA/QVD/SAP/EKKO.qvd](qvd)
-Where Match(BSART, 'ZIMP','ZLOC','ZSRV','XLOC','XZIMP');
-Call Timer;
-
-
-MAPPING_ZZ_DDS_ITEM:
-MAPPING LOAD
-    BUKRS & '|' & LIFNR as BUKRS_LIFNR,
-    ZZ_DDS_ITEM
-FROM [lib://Data/!QVD DATA/QVD/SAP/LFB1.qvd](qvd)
-;
-Call Timer;
-
-
-// маппинг для наименования контракта
-MAPPING_EXTCNUM:
-Mapping LOAD
-	INTCNUM as ZUONR,
-    EXTCNUM
-FROM [lib://Data/!QVD DATA/QVD/SAP/J_3RFCNT.qvd](qvd)
-;
-Call Timer;
-
-MARA_GROUP:
-mapping LOAD
-    MATNR,
-    MATKL
-FROM [lib://Data/!QVD DATA/QVD/SAP/MARA.qvd]
-(qvd);
-Call Timer;
-
-
-GP_SUPPLY_LOCAL:
-mapping Load
-    Text(LIFNR) as LIFNR,
-    Актуальность as [Актуальность поставщиков]
-    
-FROM [lib://Data/!QVD DATA/QVD/GD/BP_SUPPLY_LOCAL.qvd](qvd);
-Call Timer;
-
-
-
-//////////////////////////////////////////Внешний номер инвойса 
-[RBKP_RSEG_Инвойс]:
-Mapping Load
-    AWREF,
-    [Внешний номер инвойса]
-;
-LOAD 
-    BELNR as AWREF,
-    XBLNR as [Внешний номер инвойса]
-FROM [lib://Data/!QVD DATA/QVD/SAP/RBKP.qvd](qvd)
-Where left(STBLG,1)<>5
-and left(STJAH,1)<>2
-and IVTYP <> 5
-and Match(RBSTAT, 5, 4);
-
-Inner Join
-LOAD
-    BELNR as AWREF
-FROM [lib://Data/!QVD DATA/QVD/SAP/RSEG.qvd](qvd)
-Where TBTKZ<>'X'
-and EXKBE='X';
-
-//////////////////////////////////////////
-Call Timer;
-
-///$tab FinalData
-Data:
-NoConcatenate LOAD *,  
-	ApplyMap('Справочник BSART', BSART, 'Нет канала закупа') as [Тип канала],
-    If([Актуальность]='актуальный', [Актуальность], 'Не актуальный') as [Актуальность поставщиков],
-	LIFNR&МВП as LIFNR_KEY,
-    replace(МВП,' ','') as WERKS_ACCESS,
-    if(ApplyMap('Справочник BSART', BSART, 'Нет канала закупа')='Импорт', 2, 1) as FLAG_SUPPLY_CHANNEL,
-;
-
-NoConcatenate LOAD
-    ApplyMap('RBKP_RSEG_Инвойс', AWREF, 'Нет внеш. инвойса') as [Внешний номер инвойса],
-    ApplyMap('MAPPING_ZZ_DDS_ITEM', RBUKRS & '|' & LIFNR, 'Нет ZZ_DDS_ITEM') as ZZ_DDS_ITEM,
-    ApplyMap('MAPPING_NAME', LIFNR, 'Нет поставщика') as Поставщик, 
-    ApplyMap('MAPPING_EXTCNUM', ZUONR, 'Нет контракта') as Контракт,
-	ApplyMap('GP_SUPPLY_LOCAL', LIFNR, 'Нет данных') as [Актуальность],
-    ApplyMap('EKKO_BSART', LIFNR) as BSART, 
-    ApplyMap('MARA_GROUP', MATNR, 'Нет группы материалов') as [Группа материалов],
-	ApplyMap('MATERIALS_SUPPLY', MATNR, 'Нет группировки') as [Группировка], 
-    'ZUD' as Валюта_ZUD,
-    'UZS' as Валюта_UZS,
-    'ZUDMVP' as Валюта_ZUDMVP,
-    if(ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR) = 1, 'Переоценка',
-    if(Match(BLART, 'KR', 'RE', 'AC', 'KG', 'RI', 'RM', 'I2', 'XF', 'XR', 'XO', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6'),'Принятый инвойс',  
-    if(Match(BLART, 'KA', 'KZ', 'XP', 'ZP', 'PW'),'Оплата',
-    if(Match(BLART, 'KN','AO','VZ','GT', 'NA', 'ST', 'KK', 'SA', 'PE', 'CL', 'CB', 'CP'),'Корректировка'
-    )   )  )  ) as key,
-	WSL as Сумма_WAERS,
-    HSL as Сумма_UZS,
-    KSL as Сумма_ZUD,
-    OSL as Сумма_ZUDMVP,
-    Text(Right(PRCTR, 4)) as МВП,
-	if(AWREF_REV = ' ', 1, 0) as AWREF_REV,
-    RBUKRS as БЕ,
-    RBUKRS,
-    LIFNR,
-    ZUONR,
-    BLART,
-    TSL,
-    WSL,
-    HSL,
-    KSL,
-    OSL,
-    BUDAT as RDAY,
-    BUDAT as [Дата проводки],
-    BUDAT,
-    PRCTR,
-    RWCUR as Валюта,
-    RWCUR as Валюта_WAERS,
-    KOART,
-    RACCT,
-    Date(if(IsNull(num(AUGDT)), 1, num(AUGDT))) as AUGDT,
-    BELNR,
-    DRCRK,
-    BSTAT,
-    MATNR,
-    SGTXT,
-    GJAHR
-FROM [lib://Data/!QVD DATA/QVD/SAP/ACDOCA.qvd](qvd)
-WHERE RLDNR = '0L' 
-	and LIFNR<>' ' 
-    and (RACCT like '23*' or RACCT like '33*')
-    and RACCT<>3309999990 
-    and RACCT<>3300101300;
-;
-Call Timer;
-
-Set vFolders ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc', '1DX-I7dh-5sHLNGtJKGBudMfhFvW86com', '18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4', '135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25', '1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu', '1BGhV3VIQwBC4lqFUey9TSub9gVciVohp', '1Cgc6CcISKn00qJoHptQs0SP95P3He3FI', '11DS1qYTGG0eEl1DWHqOh14qH0vJiEisY', '1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS', '1IWD6tsty-mUY9heBaLAdtymi074CnCrI';
+Let vDay = MonthStart(AddMonths(Today(), -2));
 
 for each FLD in $(vFolders)
-Поставщики_Справочник:
+[vendor_prisv]:
 LOAD
-    Поставщик&МВП as LIFNR_KEY,
+    '000000'&МВП&Поставщик&Присвоение as vendor_prisv_key,
+    "Тип допрасхода"
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
+(ooxml, embedded labels, table is Пост_Присвоения);
+Next
+
+for each FLD in $(vFolders)
+[MVZ]:
+LOAD
+    '000000'&МВП&МВЗ&Операция&"Счет Главной Книги" as mvz_include_key,
+    Исключить
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/MVZ LIST.xlsx]
+(ooxml, embedded labels, table is МВЗ_исключения);
+Next
+
+for each FLD in $(vFolders)
+[DocName]:
+LOAD
+    "Вид документа"& '000000' & МВП as BLART_KEY,
+    "Название вида документа"
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/План Счетов.xlsx]
+(ooxml, embedded labels, table is Лист2);
+Next
+
+for each FLD in $(vFolders)
+[Clients]:
+LOAD
+    text(Дебитор & '000000' & "Сбытовая организация") as Clients_Key1,
+    "Канал сбыта",
+    Имя,
     Страна,
-    "Vengroup 1",
-    "Vengroup 2"
+    Канал,
+    "Регион клиента"
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
+(ooxml, embedded labels, table is Клиенты);
+Next
+
+for each FLD in $(vFolders)
+[PEREDEL]:
+LOAD
+    "Вид заказа" as MANUFACTURINGORDERTYPE,
+    "Название вида заказа",
+    "Группа вида заказа"
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/MVZ LIST.xlsx]
+(ooxml, embedded labels, table is Вид_заказа);
+Next
+
+for each FLD in $(vFolders)
+[MVZ_List]:
+LOAD
+    Text("СЧЕТ МВЗ")& '000000' & МВП as RCNTR_KEY,
+    "НАЗВАНИЕ МВЗ",
+    Группа as [Группа МВЗ]
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/MVZ LIST.xlsx]
+(ooxml, embedded labels, table is Группа_МВЗ);
+Next
+
+for each FLD in $(vFolders)
+[Поставщики_EXCEL]:
+LOAD
+	Поставщик & '000000' & МВП as Client_Zakup_key,
+    Страна as Страна_Поставщика,
+    "Имя 1" as Имя_Поставщика,
+    "Vengroup 1" as Поставщики_Группа1,
+    "Vengroup 2" as Поставщики_Группа2
 FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
 (ooxml, embedded labels, table is Поставщики);
 Next
 
-Call Timer;
+[Vendors]:
+Mapping LOAD
+    vendor_prisv_key,
+    "Тип допрасхода"
+Resident vendor_prisv;
+
+[MVZ_Include]:
+Mapping Load
+	mvz_include_key,
+    Исключить
+Resident MVZ;
+
+Drop Table vendor_prisv;
+Drop Table MVZ;
+
+[Clients]:
+Mapping Load
+	VBELN,
+    KUNNR
+From [lib://Data/!QVD DATA/QVD/SAP/VBAK.qvd](qvd);
+
+// Exit Script;
+///$tab Материалы
+Set WerkList = '1203','1204','1205','1206','1207','1208','1209','4301','4601','1301';
 
 
-Поставщики_Справочник:
+//1301, 1204, 1203, 1207, 1208, 4501, 1209, 1205, 1206, 4601, 4701, 4301, 4702
+Set vFolders1 ='1DX-I7dh-5sHLNGtJKGBudMfhFvW86com', '18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4', '1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu', '1BGhV3VIQwBC4lqFUey9TSub9gVciVohp', '1Cgc6CcISKn00qJoHptQs0SP95P3He3FI', '11DS1qYTGG0eEl1DWHqOh14qH0vJiEisY', '1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS', '1IWD6tsty-mUY9heBaLAdtymi074CnCrI', '15l0ROo6QuJybikVjUHHUeiJeWCzXqXz8', '1RiO0Y_OCmA9N50NbpSF8v1fYw5mbf1b7', '1YLA1M6BjOuqD891ytt8OGAMasCZztIvD', '1DfivG1zVUFVsHzIJ2xEvetrgUY8TaLqe', '1-3_BIjbQuX_M-r6RIR2grPF60TM_tMd0';
+//1201, 1101
+Set vFolders2 ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc', '135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25';
+
+// Set vFolders2 ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc', '1DX-I7dh-5sHLNGtJKGBudMfhFvW86com', '18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4';
+
+//1101
+ //1201
+ //1203
+ //1204
+ //1205
+ //1206
+ //1207
+ //1208
+ //1209
+ //1301
+ //4301
+ //4601
+ //5101
+
+// LOAD
+//     "Основной счет"
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25/План Счетов.xlsx]
+// (ooxml, embedded labels, table is Лист1);
+
+
+
+
+
+//        [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1w7Yx-8NWMbAPRy1FuxIlLVjL6YmeYq22/План Счетов.xlsx]	
+
+// Exit Script;
+
+
+// [Mat_Groups]:
+// LOAD
+//   Материал & '000000' & Завод as mat_group_key,
+//   Имя as [Имя Материала],
+//   "Группа 1" as [Группа Материала],
+//   "Группа 2" as [Группа Материала для анализа],
+//   "Группа 3",
+//   "Группа 4",
+//   "Группа 5",
+//   "Уд. Вес" as [Удельный вес],
+//   "Балансовая группа" as [Балансовая группа материала] 
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc/Материалы.xlsx]
+// (ooxml, embedded labels, table is [Группы материалов]);
+  
+// Concatenate (Mat_Groups) LOAD
+//   Материал & '000000' & Завод as mat_group_key,
+//   Имя as [Имя Материала],
+//   "Группа 1" as [Группа Материала],
+//   "Группа 2" as [Группа Материала для анализа],
+//   "Группа 3",
+//   "Группа 4",
+//   "Группа 5",
+//   "Уд. Вес" as [Удельный вес],
+//   "Балансовая группа" as [Балансовая группа материала] 
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25/Материалы.xlsx]
+// (ooxml, embedded labels, table is [Группы материалов]);
+
+
+// for each WERK in $(WerkList)
+//   Concatenate (Mat_Groups) LOAD
+//       Материал & '000000' & Завод as mat_group_key,
+//       Имя as [Имя Материала],
+//       "Группа 1" as [Группа Материала],
+//       "Группа 2" as [Группа Материала для анализа],
+//       "Уд. Вес" as [Удельный вес],
+//       "Балансовая группа" as [Балансовая группа материала] 
+// 	FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1Lwlh1rGFx1kFF4_rtI5SdsU-_12DWY91/$(WERK).xlsx]
+//   (ooxml, embedded labels, table is [Группы материалов]);
+// next
+
+// [Mat_prod_groups]:
+// LOAD
+//   mat_group_key as cost_group_key,
+//   [Имя Материала] as [Материал затрат],
+//   [Группа Материала] as [Группа затрат],
+//   [Группа Материала для анализа] as [Группа для анализа затрат],
+//   "Группа 3" AS "Группа 3 Затрат",
+//   "Группа 4" AS "Группа 4 Затрат",
+//   [Удельный вес] as [Уд. Вес затрат],
+//   [Балансовая группа материала] as [Передел ГП затрат]
+// Resident Mat_Groups;
+
+
+for each FLD in $(vFolders)
+[Mat_Groups]:
 LOAD
-    Поставщик&МВП as LIFNR_KEY,
+  Материал & '000000' & Завод as mat_group_key,
+  Имя as [Имя Материала],
+  "Группа 1" as [Группа Материала],
+  "Группа 2" as [Группа Материала для анализа],
+  "Группа 3",
+  "Группа 4",
+  "Группа 5",
+  "Уд. Вес" as [Удельный вес],
+  "Балансовая группа" as [Балансовая группа материала] 
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Материалы.xlsx]
+(ooxml, embedded labels, table is [Группы материалов]);
+Next
+
+
+for each FLD in $(vFolders2)
+[MAT]:
+CrossTable (Месяц, Удельный_вес_по_месяцам, 11)
+LOAD
+*
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Материалы.xlsx]
+(ooxml, embedded labels, table is [Группы материалов]);
+Next
+
+Mat_prod_groups:
+Load
+  Материал & '000000' & Завод & Месяц as cost_group_key,
+  Имя as [Материал затрат],
+  "Группа 1" as [Группа затрат],
+  "Группа 2" as [Группа для анализа затрат],
+  "Группа 3" AS "Группа 3 Затрат",
+  "Группа 4" AS "Группа 4 Затрат",
+  "Группа 5" AS "Группа 5 Затрат",
+  Удельный_вес_по_месяцам as [Уд. Вес затрат],
+  "Балансовая группа" as [Передел ГП затрат] 
+Resident MAT;
+
+Drop Table MAT;
+
+//   Concatenate (Mat_prod_groups) LOAD
+//       Материал & '000000' & Завод as cost_group_key,
+//       Имя as [Материал затрат],
+//       "Группа 1" as [Группа затрат],
+//       "Группа 2" as [Группа для анализа затрат],
+//       "Группа 3" AS "Группа 3 Затрат",
+//       "Группа 4" AS "Группа 4 Затрат",
+//       "Группа 5" AS "Группа 5 Затрат",
+//       "Уд. Вес" as [Уд. Вес затрат],
+//       "Балансовая группа" as [Передел ГП затрат] 
+// 	FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1Lwlh1rGFx1kFF4_rtI5SdsU-_12DWY91/1201.xlsx]
+//   (ooxml, embedded labels, table is [Группы материалов]);
+  
+for each FLD in $(vFolders1)
+  Concatenate (Mat_prod_groups) LOAD
+      Материал & '000000' & Завод as cost_group_key,
+      Имя as [Материал затрат],
+      "Группа 1" as [Группа затрат],
+      "Группа 2" as [Группа для анализа затрат],
+      "Уд. Вес" as [Уд. Вес затрат],
+      "Балансовая группа" as [Передел ГП затрат] 
+	FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Материалы.xlsx]
+  (ooxml, embedded labels, table is [Группы материалов]);
+next
+
+
+
+
+
+[Mat_Groups_ACDOCA]:
+LOAD
+  mat_group_key as mat_group_key_acdoca,
+  [Имя Материала] as [Имя Материала acdoca],
+  [Группа Материала] as [Группа Материала acdoca],
+  [Группа Материала для анализа] as [Группа Материала для анализа acdoca],
+  "Группа 3" as "Группа 3 acdoca",
+  "Группа 4" as "Группа 4 acdoca",
+  "Группа 5" as "Группа 5 acdoca",
+  [Удельный вес] as [Удельный вес acdoca],
+  [Удельный вес] as UMREN_UMREZ_7,
+  [Балансовая группа материала] as [Балансовая группа материала acdoca] 
+Resident Mat_Groups;
+
+
+
+[Mat_CKM3N_groups]:
+LOAD
+  mat_group_key as ZCO_MAT_KEY,
+  [Имя Материала] as [Имя Материала CKM3N],
+  [Группа Материала] as [Группа Материала CKM3N],
+  [Группа Материала для анализа] as [Группа Материала для анализа CKM3N],
+  "Группа 3" as "Группа 3 CKM3N",
+  "Группа 4" as "Группа 4 CKM3N",
+  "Группа 5" as "Группа 5 CKM3N",
+  [Удельный вес] as [Удельный вес CKM3N],
+  [Удельный вес] as UMREN_UMREZ_MATERIAL_7,
+  [Балансовая группа материала] as [Балансовая группа материала CKM3N] 
+Resident Mat_Groups;
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Vid_Dvij]:
+Load * Inline [
+BWART, BWART_NAME
+101, Выпуск
+102, Выпуск
+531, Тех. Отход
+532, Тех. Отход
+261, Затраты
+262, Затраты
+'aaa', Расходы
+];
+
+// Drop Table IPPMFGORDER, MATDOC;
+
+[CATEGORY_TEXT]:
+Load * Inline [
+CATEGORY, CATEGORY_TEXT
+AB, Начальные запасы
+PC, Изменения цен
+ZU, Поступления
+VP, Прочие увеличения/уменьшения запасов материалов
+VN, Потребление
+EB, Итоговое сальдо
+NV, Не распределено (устарело)
+KB, Кумулятивный запас
+NC, Не перерассчитано
+ND, Не распределено
+
+];
+
+[TYPEPROC_TEXT]:
+Load * Inline [
+PROCESSTYPE, PROCESSTYPE_TEXT
+VUBS, Проводка переноса особого запаса
+VU, Перемещение запаса
+VP, Проект
+VL, Обработка давальческого материала
+VKA, Заказ клиента
+VK, Место возникновения затрат
+VF, Производство
+VEAU, Потребление для 1-уровневых заказов
+V+, Потребление
+DC, Прочие(проверка)
+BUBS, Проводка переноса особого запаса
+BU, Перемещение запаса
+BL, Обработка давальческого материала
+BF, Производство
+BB, Заказ на поставку
+B+, Заготовка
+' ', Начало
+];
+
+
+// LOAD
+//     Завод,
+//     "Рабочее место",
+//     Название,
+//     МВЗ,
+//     "Вид заказа"
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1w7Yx-8NWMbAPRy1FuxIlLVjL6YmeYq22/MVZ LIST.xlsx]
+// (ooxml, embedded labels, table is Лист3);
+
+// LOAD
+//     "Вид заказа",
+//     "Название вида заказа"
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1w7Yx-8NWMbAPRy1FuxIlLVjL6YmeYq22/MVZ LIST.xlsx]
+// (ooxml, embedded labels, table is Лист4);
+
+
+///$tab План счетов
+Set WerkList = '1203','1204','1205','1206','1207','1208','1209','4301','4601','1301';
+
+// Set vFolders ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc';
+//'135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25',,'1bOG2_WqBhfZ-PKd9Uw4kB3aVAbB6fYYu','18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4','1IWD6tsty-mUY9heBaLAdtymi074CnCrI', '15l0ROo6QuJybikVjUHHUeiJeWCzXqXz8','1BGhV3VIQwBC4lqFUey9TSub9gVciVohp','1Cgc6CcISKn00qJoHptQs0SP95P3He3FI','1qRdHZsS0AX97azHa1IkfBhtsbDQoCWBS','1DX-I7dh-5sHLNGtJKGBudMfhFvW86com','1DfivG1zVUFVsHzIJ2xEvetrgUY8TaLqe','1RiO0Y_OCmA9N50NbpSF8v1fYw5mbf1b7','1hOTWIGPqky6yB4rRsKf4h0iXYEUSafk7'
+
+for each FLD in $(vFolders)
+  [Acc_Names]:
+	LOAD
+      text("Основной счет") & '000000' & МВП as AccKey,
+      "Основной счет",
+      "Подробный текст ОСч",
+      "ГРУППА 1",
+      "ГРУППА 2",
+      "ГРУППА 3",
+      "ГРУППА 4",
+      "ГРУППА 5 (Для МВЗ)"
+	FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/План Счетов.xlsx]
+  (ooxml, embedded labels, table is Лист1);
+Next
+
+[KURS_DIFF_Names]:
+LOAD
+	AccKey as AccKey_KURS,
+    "Основной счет" as "Основной счет_КР",
+    "Подробный текст ОСч" as "Подробный текст ОСч_КР",
+    "ГРУППА 1" as "ГРУППА 1_КР",
+    "ГРУППА 2" as "ГРУППА 2_КР",
+    "ГРУППА 3" as "ГРУППА 3_КР",
+    "ГРУППА 4" as "ГРУППА 4_КР",
+    "ГРУППА 5 (Для МВЗ)" as "ГРУППА 5 (Для МВЗ)_КР"
+Resident Acc_Names;
+
+[KURS_DIFF_Cost_Num]:
+LOAD
+	AccKey as AccKey_Cost_Num,
+    "Основной счет" as "Основной счет_КР_Cost_Num",
+    "Подробный текст ОСч" as "Подробный текст ОСч_КР_Cost_Num",
+    "ГРУППА 1" as "ГРУППА 1_КР_Cost_Num",
+    "ГРУППА 2" as "ГРУППА 2_КР_Cost_Num",
+    "ГРУППА 3" as "ГРУППА 3_КР_Cost_Num",
+    "ГРУППА 4" as "ГРУППА 4_КР_Cost_Num",
+    "ГРУППА 5 (Для МВЗ)" as "ГРУППА 5 (Для МВЗ)_КР_Cost_Num"
+Resident Acc_Names;
+///$tab АЕИ
+[АЕИ_Справочник]:
+LOAD
+    MATNR,
+    UMREN_UMREZ,
+    АЕИ_0,
+    АЕИ_1,
+    АЕИ_2,
+    АЕИ_3,
+    АЕИ_4,
+    UMREN_UMREZ_0,
+    UMREN_UMREZ_1,
+    UMREN_UMREZ_2,
+    UMREN_UMREZ_3,
+    UMREN_UMREZ_4
+FROM [lib://Data/!QVD DATA/APP_006/PreModel/АЕИ_Справочник.qvd](qvd)
+;
+
+MARA:
+Left Join (АЕИ_Справочник) LOAD
+    MATNR
+	,NTGEW as UMREN_UMREZ_5
+    ,BRGEW as UMREN_UMREZ_6
+    ,'KG' as АЕИ_5
+    ,'KG' as АЕИ_6
+FROM [lib://Data/!QVD DATA/QVD/SAP/MARA.qvd]
+(qvd);
+
+[АЕИ_Справочник_ГП]:
+LOAD
+    MATNR as Prod_Material,
+    UMREN_UMREZ as UMREN_UMREZ_Prod_Material,
+    АЕИ_0 as АЕИ_Prod_Material_0,
+    АЕИ_1 as АЕИ_Prod_Material_1,
+    АЕИ_2 as АЕИ_Prod_Material_2,
+    АЕИ_3 as АЕИ_Prod_Material_3,
+    АЕИ_4 as АЕИ_Prod_Material_4,
+    АЕИ_5 as АЕИ_Prod_Material_5,
+    АЕИ_6 as АЕИ_Prod_Material_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_Prod_Material_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_Prod_Material_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_Prod_Material_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_Prod_Material_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_Prod_Material_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_Prod_Material_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_Prod_Material_6	
+Resident АЕИ_Справочник
+;
+
+[АЕИ_Справочник_Cost]:
+LOAD
+    MATNR as Cost_Material,
+    UMREN_UMREZ as UMREN_UMREZ_Cost_Material,
+    АЕИ_0 as АЕИ_Cost_Material_0,
+    АЕИ_1 as АЕИ_Cost_Material_1,
+    АЕИ_2 as АЕИ_Cost_Material_2,
+    АЕИ_3 as АЕИ_Cost_Material_3,
+    АЕИ_4 as АЕИ_Cost_Material_4,
+    АЕИ_5 as АЕИ_Cost_Material_5,
+    АЕИ_6 as АЕИ_Cost_Material_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_Cost_Material_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_Cost_Material_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_Cost_Material_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_Cost_Material_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_Cost_Material_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_Cost_Material_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_Cost_Material_6
+Resident АЕИ_Справочник
+;
+
+[АЕИ_Справочник_ZCO]:
+LOAD
+    MATNR as MATERIAL,
+    UMREN_UMREZ as UMREN_UMREZ_MATERIAL,
+    АЕИ_0 as АЕИ_MATERIAL_0,
+    АЕИ_1 as АЕИ_MATERIAL_1,
+    АЕИ_2 as АЕИ_MATERIAL_2,
+    АЕИ_3 as АЕИ_MATERIAL_3,
+    АЕИ_4 as АЕИ_MATERIAL_4,
+    АЕИ_5 as АЕИ_MATERIAL_5,
+    АЕИ_6 as АЕИ_MATERIAL_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_MATERIAL_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_MATERIAL_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_MATERIAL_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_MATERIAL_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_MATERIAL_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_MATERIAL_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_MATERIAL_6
+Resident АЕИ_Справочник
+;
+///$tab Main
+SET ThousandSep=' ';
+SET DecimalSep=',';
+SET MoneyThousandSep=' ';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='# ##0,00 ₽;-# ##0,00 ₽';
+SET TimeFormat='h:mm:ss';
+SET DateFormat='DD.MM.YYYY';
+SET TimestampFormat='DD.MM.YYYY h:mm:ss[.fff]';
+SET FirstWeekDay=0;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='ru-RU';
+SET MonthNames='янв.;февр.;мар.;апр.;мая;июн.;июл.;авг.;сент.;окт.;нояб.;дек.';
+SET LongMonthNames='январь;февраль;март;апрель;май;июнь;июль;август;сентябрь;октябрь;ноябрь;декабрь';
+SET DayNames='пн;вт;ср;чт;пт;сб;вс';
+SET LongDayNames='понедельник;вторник;среда;четверг;пятница;суббота;воскресенье';
+SET NumericalAbbreviation='3:k;6:M;9:G;12:T;15:P;18:E;21:Z;24:Y;-3:m;-6:μ;-9:n;-12:p;-15:f;-18:a;-21:z;-24:y';
+LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+Set vPath = '[lib://Data Sandbox/!QVD DATA/Jaha_test/MS1100/PREMODEL/';
+$(Include=[lib://Data/Script/Format.qvs]);
+$(Include=[lib://Data/Script/SA.qvs]);
+
+// MATDOC_DATA:
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/MATDOC_DATA.qvd](qvd);
+
+// Data:
+// Load *
+// From $(vPath)DataTP2.qvd](qvd)
+// Where FISCYEARPER = '2024003'
+// RBUKRS = '1200'
+// ;
+// Exit Script;
+
+// IPPMFGORDER_PROD:
+// Concatenate (Data) Load *
+//     //replace(PRODUCTIONPLANT,' ','') as WERKS_ACCESS
+// //     replace(Text(RIGHT(PROFITCENTER, 4)),' ','') as WERKS_ACCESS
+// //     ,PRODUCTIONPLANT as WERKS
+// //     ,PROFITCENTER as PRCTR
+// //     ,if(Not WildMatch(PROFITCENTER, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PROFITCENTER, 4))) as МВП
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/IPPMFGORDER_PROD.qvd](qvd);
+
+
+// ZCOPCKM3LIST:
+// Concatenate (Data) Load *
+//     //replace(PLANT,' ','') as WERKS_ACCESS
+// //     replace(Text(RIGHT(PROFITCENTER, 4)),' ','') as WERKS_ACCESS
+// //     ,PLANT as WERKS
+// //     ,PROFITCENTER as PRCTR
+// //     ,MakeDate(Num#(POSTINGYEAR),Num#(POSTINGPERIOD),1) as RDAY
+// //     ,if(Not WildMatch(PROFITCENTER, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PROFITCENTER, 4))) as МВП,
+// //     if(Left(MATERIAL, 8) = '00000000', mid(MATERIAL,9), MATERIAL)&PROFITCENTER as ZCO_MAT_KEY
+// From [lib://Data/!QVD DATA/QVD/SAP/ZCOPCKM3LIST.qvd](qvd);
+
+
+// ZCOPCKM3LIST:
+// Concatenate (Data) Load *,
+//     //replace(PLANT,' ','') as WERKS_ACCESS
+//     replace(Text(RIGHT(PROFITCENTER_ZCO, 4)),' ','') as WERKS_ACCESS
+//     ,PLANT as WERKS
+//     ,PROFITCENTER_ZCO as PRCTR
+//     ,if(Not WildMatch(PROFITCENTER_ZCO, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PROFITCENTER_ZCO, 4))) as МВП
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/ZCOPCKM3LIST.qvd](qvd);
+
+// ZCOPCKM3LIST:
+// Load 
+//   POSTINGPERIOD // Период
+//   ,POSTINGYEAR // Год
+//   ,Right(PROFITCENTER, 4) as PROFITCENTER_ZCO  // МВП
+//   ,CURRENCYTYPE // Валюта
+//   ,CATEGORY // Категория
+//   ,PROCESSTYPE // Тип процесса
+//   ,PROCESSTYPETEXT // Название типа процесса
+//   ,ACTUALPRICE // Факт цена
+//   ,PLANT // Завод
+//   ,MATERIAL // Материал
+//   ,MATERIALTEXT // Название материала
+//   ,CATEGORYTEXT // Название категории
+//   ,QUANTITY // Количество
+//   ,ACTUALVALUE // Фактическое значение
+//   ,CHRCT_RAWMAT // Тип сырья
+//   ,CHRCT_OUTER_SIDE_PC_ID // Код краски снаружи
+//   ,CHRCT_SURFACE_TREATMENT // Продуктовая группа
+//   ,CHRCT_SEALER_COLOR // Резина
+//   ,CHRCT_SYSTEM // Серия
+//   ,CHRCT_OUTER_SIDE_WG_ID // Цвет плёнки снаружи
+//   ,if(Left(MATERIAL, 8) = '00000000', mid(MATERIAL,9), MATERIAL)&PROFITCENTER as ZCO_MAT_KEY
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/ZCOPCKM3LIST.qvd](qvd);
+// ;
+    
+// Select
+//   POSTINGPERIOD // Период
+//   ,POSTINGYEAR // Год
+//   ,PROFITCENTER  // МВП
+//   ,CURRENCYTYPE // Валюта
+//   ,CATEGORY // Категория
+//   ,PROCESSTYPE // Тип процесса
+//   ,PROCESSTYPETEXT // Название типа процесса
+//   ,ACTUALPRICE // Факт цена
+//   ,PLANT // Завод
+//   ,MATERIAL // Материал
+//   ,MATERIALTEXT // Название материала
+//   ,CATEGORYTEXT // Название категории
+//   ,QUANTITY // Количество
+//   ,ACTUALVALUE // Фактическое значение
+//   ,CHRCT_RAWMAT // Тип сырья
+//   ,CHRCT_OUTER_SIDE_PC_ID // Код краски снаружи
+//   ,CHRCT_SURFACE_TREATMENT // Продуктовая группа
+//   ,CHRCT_SEALER_COLOR // Резина
+//   ,CHRCT_SYSTEM // Серия
+//   ,CHRCT_OUTER_SIDE_WG_ID // Цвет плёнки снаружи
+// From ZCOPCKM3LIST
+// Where PROFITCENTER = '0000001201' 
+// // and POSTINGYEAR = '2024'
+// ;
+
+// BKPF:
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/BKPF.qvd](qvd);
+
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/BKPF1006.qvd](qvd);
+
+// BKPF:
+// Load
+// 	BUKRS&BELNR&GJAHR as Dok_Key,
+//     TCODE
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/QVD/BKPF.qvd](qvd)
+// ;
+
+// MARA:
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/MARA.qvd](qvd);
+
+// MARA2:
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/MARA2.qvd](qvd);
+
+// Calendar:
+// // Load *
+// // From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/Calendar.qvd](qvd);
+
+// Load *
+// From $(vPath)CalendarTP.qvd](qvd);
+
+// LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+
+// VBAK:
+// Load
+// 	VBELN,
+//     KUNNR
+// ;
+// Select
+// 	VBELN,
+//     KUNNR
+// From VBAK;
+
+// Drop Field TIMESTAMP;
+///$tab FINANCE LOAD
+LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+let vYearMonth = Date(AddMonths(MonthStart(Today()),-4), 'YYYY0MM');
+Set vPath = '[lib://Data Sandbox/!QVD DATA/Jaha_test/MS1100/PREMODEL/';
+
+Trace $(vYearMonth);
+
+// Exit Script;
+//BALANCE
+ACDOCA:
+Load 
+GJAHR,
+RBUKRS,
+RACCT,
+PRCTR,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'BALANCE' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND NOT (RACCT LIKE '88%' OR 
+	 RACCT LIKE 'TP25%' OR 
+     RACCT LIKE 'TP42%' OR 
+     RACCT LIKE '25%' OR
+     RACCT LIKE '27%' OR
+     RACCT LIKE '37%' OR
+     RACCT LIKE '51%' OR
+     RACCT LIKE '24%' OR
+     RACCT LIKE '34%' OR
+     RACCT LIKE '8%' OR
+     RACCT LIKE '54%' OR
+     RACCT =    '2200101300' OR
+     RACCT =    '3300101300' OR
+     RACCT =    '3900101000' OR
+     RACCT =    '5900000000' OR
+     RACCT =    '2190000000' OR
+     RACCT LIKE '6%' OR
+     RACCT LIKE '7%' OR
+     RACCT LIKE 'TP61%' OR
+     RACCT LIKE 'TP71%'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)        
+// )
+
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+;
+
+// Exit Script;
+
+//OTHER ACCS & 25
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+PPRCTR,
+PRCTR,
+BLART,
+RACCT,
+DRCRK,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'OTHER' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+    main~PPRCTR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+    main~FISCYEARPER
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND (RACCT LIKE 'TP25%' OR 
+     RACCT LIKE 'TP42%' OR 
+     RACCT LIKE '25%' OR
+     RACCT LIKE '27%' OR
+     RACCT LIKE '37%' OR
+     RACCT LIKE '51%' OR
+     RACCT LIKE '24%' OR
+     RACCT LIKE '34%' OR
+     RACCT LIKE '54%' OR
+     RACCT =    '2200101300' OR
+     RACCT =    '3300101300' OR
+     RACCT =    '3900101000' OR
+     RACCT =    '5900000000' OR
+     RACCT =    '2190000000'
+		)
+AND NOT (
+     RACCT =    '2400201000' OR
+     RACCT =    '3400200000'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+    main~PPRCTR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+	main~FISCYEARPER
+;
+
+
+//VAT
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+BELNR,
+PRCTR,
+BLART,
+RACCT,
+DRCRK,
+AWREF_REV,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'VAT' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+    main~FISCYEARPER
+    main~BELNR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+    main~AWREF_REV
+    main~WSL
+    main~OSL
+    main~MSL
+//     Sum(main~WSL) AS WSL
+//     Sum(main~OSL) AS OSL
+//     Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND (
+     RACCT =    '2400201000' OR
+     RACCT =    '3400200000'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+// GROUP BY 
+//     main~GJAHR
+//     main~RBUKRS
+//     main~FISCYEARPER
+//     main~BELNR
+//     main~PRCTR
+//     main~BLART
+//     main~RACCT
+//     main~AWREF_REV
+//     main~DRCRK
+;
+
+
+//SALES <> 1301
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+KUNNR,
+PPRCTR,
+BLART,
+' ' as KDAUF,
+' ' as KDPOS,
+PRCTR,
+MATNR,
+FKART,
+AUFNR,
+RACCT,
+RFAREA,
+DRCRK,
+RCNTR,
+AWTYP,
+WSL,
+OSL,
+MSL,
+AWREF_REV,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'SALES' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~KUNNR
+    main~PPRCTR
+    main~BLART
+//     main~KDAUF
+    main~PRCTR
+    main~MATNR
+    main~FKART
+    main~AUFNR
+    main~RACCT
+    main~RFAREA
+    main~DRCRK
+    main~RCNTR
+    main~AWTYP
+    main~AWREF_REV
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND PRCTR <> '0000001301'
+AND (
+     RACCT LIKE '6%' OR
+     RACCT LIKE '7%' OR
+     RACCT LIKE 'TP61%' OR
+     RACCT LIKE 'TP71%'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~KUNNR
+    main~PPRCTR
+    main~BLART
+//     main~KDAUF
+    main~PRCTR
+    main~MATNR
+    main~FKART
+    main~AUFNR
+    main~RACCT
+    main~RFAREA
+    main~DRCRK
+    main~RCNTR
+    main~AWTYP
+    main~AWREF_REV
+;
+
+
+
+//SALES 1301
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+KUNNR,
+PPRCTR,
+BLART,
+KDAUF,
+KDPOS,
+PRCTR,
+MATNR,
+FKART,
+AUFNR,
+RACCT,
+RFAREA,
+DRCRK,
+RCNTR,
+AWTYP,
+WSL,
+OSL,
+MSL,
+AWREF_REV,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'SALES' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~KUNNR
+    main~PPRCTR
+    main~BLART
+    main~KDAUF
+    main~KDPOS
+    main~PRCTR
+    main~MATNR
+    main~FKART
+    main~AUFNR
+    main~RACCT
+    main~RFAREA
+    main~DRCRK
+    main~RCNTR
+    main~AWTYP
+    main~AWREF_REV
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND PRCTR = '0000001301'
+AND (
+     RACCT LIKE '6%' OR
+     RACCT LIKE '7%' OR
+     RACCT LIKE 'TP61%' OR
+     RACCT LIKE 'TP71%'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~KUNNR
+    main~PPRCTR
+    main~BLART
+    main~KDAUF
+    main~KDPOS
+    main~PRCTR
+    main~MATNR
+    main~FKART
+    main~AUFNR
+    main~RACCT
+    main~RFAREA
+    main~DRCRK
+    main~RCNTR
+    main~AWTYP
+    main~AWREF_REV
+;
+
+
+//MVZ
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+PRCTR,
+RACCT,
+RFAREA,
+RCNTR,
+AWTYP,
+DRCRK,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'MVZ' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~PRCTR
+    main~RACCT
+    main~RFAREA
+    main~RCNTR
+    main~AWTYP
+    main~DRCRK
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND (
+     RACCT LIKE '8%'
+		)
+AND NOT (
+     RACCT LIKE '88%'
+		)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~PRCTR
+    main~RACCT
+    main~RFAREA
+    main~RCNTR
+    main~AWTYP
+    main~DRCRK
+;
+
+//88*
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+PPRCTR,
+PRCTR,
+BLART,
+RACCT,
+DRCRK,
+RFAREA,
+RCNTR,
+AWTYP,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'88' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~PPRCTR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+    main~RFAREA
+    main~RCNTR
+    main~AWTYP
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+AND (RACCT LIKE '88%')
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND NOT EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        (zak~MLPTYP = 'BB' OR zak~RACCT IN ('6300300000', '7300300000'))
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+	main~FISCYEARPER
+    main~PPRCTR
+    main~PRCTR
+    main~BLART
+    main~RACCT
+    main~DRCRK
+    main~RFAREA
+    main~RCNTR
+    main~AWTYP
+;
+
+
+//ZAKUP
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+BELNR,
+RACCT,
+PRCTR,
+PPRCTR,
+LIFNR,
+ZUONR,
+MLPTYP,
+MLCATEG,
+RFAREA,
+AWTYP,
+MATNR,
+RUNIT,
+BLART,
+AWREF_REV,
+DRCRK,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'ZAKUP' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+    main~BELNR
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    main~PPRCTR
+    main~LIFNR
+    main~ZUONR
+    main~MLPTYP
+    main~MLCATEG
+    main~RFAREA
+	main~AWTYP
+    main~MATNR
+    main~RUNIT
+    main~BLART
+    main~DRCRK
+    main~AWREF_REV
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        zak~MLPTYP = 'BB'
+)
+GROUP BY 
+    main~GJAHR
+    main~RBUKRS
+    main~BELNR
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    main~PPRCTR
+    main~LIFNR
+    main~ZUONR
+    main~MLPTYP
+    main~MLCATEG
+    main~RFAREA
+	main~AWTYP
+    main~MATNR
+    main~RUNIT
+    main~BLART
+    main~AWREF_REV
+    main~DRCRK
+;
+
+
+
+//PEREOC
+Concatenate (ACDOCA)
+Load 
+GJAHR,
+RBUKRS,
+BELNR,
+RACCT,
+PRCTR,
+PPRCTR,
+RFAREA,
+AWTYP,
+RCNTR,
+BLART,
+DRCRK,
+GJAHR01,
+WSL,
+OSL,
+MSL,
+if(RIGHT(FISCYEARPER,2)>12, LEFT(FISCYEARPER,5)&'12',FISCYEARPER) AS FISCYEARPER,
+'PEREOC' as RACCT_TYPE;
+SELECT
+    main~GJAHR
+    main~RBUKRS
+    main~BELNR
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    main~PPRCTR
+    main~RFAREA
+    main~AWTYP
+    main~RCNTR
+    main~BLART
+    main~DRCRK
+//     main~DOCLN
+    main~GJAHR AS Gasda
+//     main~WSL
+//     main~OSL
+//     main~MSL
+    Sum(main~WSL) AS WSL
+    Sum(main~OSL) AS OSL
+    Sum(main~MSL) AS MSL
+FROM ACDOCA AS main
+WHERE main~RLDNR = '0L'  AND BUDAT <> '00000000' //AND main~FISCYEARPER >= $(vYearMonth)
+// AND main~XREVERSING <> 'X' 
+// AND main~XREVERSED <> 'X'
+AND EXISTS (
+    SELECT 
+        BELNR
+    FROM ACDOCA AS zak
+    WHERE
+    	zak~BELNR  EQ main~BELNR AND
+        zak~GJAHR  EQ main~GJAHR AND
+        zak~RBUKRS EQ main~RBUKRS AND
+        zak~RLDNR  EQ main~RLDNR AND
+        zak~RACCT IN ('6300300000', '7300300000')
+)
+GROUP BY
+    main~GJAHR
+    main~RBUKRS
+    main~BELNR
+	main~FISCYEARPER
+    main~RACCT
+    main~PRCTR
+    main~PPRCTR
+    main~RFAREA
+    main~AWTYP
+    main~RCNTR
+    main~BLART
+    main~DRCRK
+;
+
+// ACDOCA_OLD:
+// Concatenate (ACDOCA)
+// Load *
+// From [lib://Data/!QVD DATA/QVD/SAP/ACDOCA_AUFNR.qvd](qvd)
+// Where FISCYEARPER < $(vYearMonth);
+
+Store ACDOCA into [lib://Data/!QVD DATA/QVD/SAP/ACDOCA_AUFNR.qvd](qvd);
+
+// Exit Script;
+///$tab FINANCE DATA
+[ZAKUP_DOCS]:
+Mapping Load
+	RBUKRS&BELNR&GJAHR as docID,
+    1
+Resident ACDOCA
+Where LIFNR = ' ' and MLPTYP = 'BB' and MLCATEG = 'ZU'
+;
+
+[ZAKUP_DOCS2]:
+Mapping Load 
+	k1,
+    k2
+Where LIFNR <> ' ' and ZAKUP_DOCS = 1;
+
+Load 
+	RBUKRS&BELNR&GJAHR as k1
+    ,LIFNR&'|'&ZUONR as k2
+	,ApplyMap('ZAKUP_DOCS', RBUKRS&BELNR&GJAHR) as ZAKUP_DOCS
+    ,LIFNR
+Resident ACDOCA
+;
+
+[KURS_SUMM]:
+Mapping Load
+	RBUKRS&BELNR&GJAHR&PRCTR,
+//     &PPRCTR,
+//     OSL
+    Sum(OSL)
+Resident ACDOCA
+Where Match(RACCT, '6300300000','7300300000') AND Not IsNull(GJAHR01)
+Group By RBUKRS, BELNR, GJAHR, PRCTR //, PPRCTR
+;
+
+KURS_DOCS:
+Mapping 
+Load kurs_key,
+	RACCT;
+NoConcatenate Load 
+Distinct RBUKRS&BELNR&GJAHR&PRCTR as kurs_key,
+RACCT
+Resident ACDOCA
+Where not IsNull(GJAHR01) and not Match(RACCT, '6300300000','7300300000');
+
+
+///$tab FINANCE DATA2
+Data:
+Load*
+	,LIFNR_ZAKUP&PRCTR as Client_Zakup_key
+	,ApplyMap('Vendors',PRCTR & LIFNR_ZAKUP & ZUONR_ZAKUP, 'Фактура') as "Тип допрасхода"
+//     ,Coalesce(KUNNR1, PPRCTR)&PRCTR as Clients_Key1
+	,Trim(text(if(KUNNR = ' ',Right(PPRCTR,4),KUNNR)&PRCTR)) as Clients_Key1
+    ,text(KURS_RACCT&PRCTR) as AccKey_KURS
+    ;
+Load *,
+	RBUKRS&BELNR&GJAHR as Dok_Key,
+//     RBUKRS&BELNR&GJAHR&GKONT as BMVP_Key,
+	Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+    text(RACCT&PRCTR) as AccKey,
+//     text(RBUKRS&ApplyMap('RACCT_MOVE', RBUKRS&BELNR&GJAHR,ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT,GKONT))) as AccKey_KURS,
+    If(Left(RACCT,4)='TP61','Доходы реализации',
+    If(Left(RACCT,4)='TP71','Себестоимость',
+    If(RFAREA='REV','Доходы реализации',
+    If(RFAREA='COS','Себестоимость',
+    If(RFAREA='PDN','Расходы производства',
+    If(RFAREA='OTH','Прочие расходы',
+    If(RFAREA='OOI' and RACCT = '6109900000','Доходы реализации',
+	If(RFAREA='OOI','Прочие доходы',
+    If(RFAREA='EXL','Курсовые разницы',
+    If(RFAREA='EXI','Курсовые разницы',
+    If(RFAREA='ADM','Админ расходы',
+    If(RFAREA='SEL','Расходы реализации',
+    If(RFAREA='CAPEX','Капрасходы',
+    If(RFAREA='FIN','Финансовые доходы',
+    If(RFAREA='FCO','Финансовые расходы',
+    If(RFAREA='SERVEX','Себес. услуг',
+    If(RFAREA='SERVIN','Себес. услуг',
+    If(RFAREA='SERVEX','Себес. услуг',
+    If(RFAREA='SERVEX','Себес. услуг',
+    If(RFAREA='IFA','Отклонения',
+    If(RFAREA='TAX','Налог на прибыль',
+    RFAREA))))))))))))))))))))) as [Func_Sphere],
+    if(Left(RACCT,2)='TP','МВП: партнер','Партнер') as [Partner],
+    if(RCNTR='1203942101',1,ApplyMap('MVZ_Include',PRCTR&RCNTR&AWTYP&RACCT,if(PPRCTR<>PRCTR or PPRCTR=' ',2,0))) as MVZInclude,
+    if(Match(left(RACCT,1),'6','7','8') or Match(RACCT,'TP61000000','TP71000000'),'P&L','Balance') as AccType,
+    ApplyMap('KURS_DOCS', RBUKRS&BELNR&GJAHR&PRCTR, '9999999999') as KURS_RACCT,
+    if(BLART = 'PE', OSL*-1, ApplyMap('KURS_SUMM', RBUKRS&BELNR&GJAHR&PRCTR, 0)) as KURS_SUMM,  //&PPRCTR
+    BLART&PRCTR as BLART_KEY,
+    RCNTR&PRCTR as RCNTR_KEY
+//     ,If(Left(RACCT, 4)='TP42' and PPRCTR = ' ', ApplyMap('88MVP', text(BELNR&WSL),PPRCTR), PPRCTR) as PPRCTR1
+//     ,if(Match(left(if(Left(GKONT,1)='0',ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT),GKONT),2),'22','32','23','33'),ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT),ApplyMap('RACCT_MOVE', RBUKRS&BELNR&GJAHR)) as KURS_RACCT
+//     ,ApplyMap('RACCT_MOVE', RBUKRS&BELNR&GJAHR,ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT,GKONT)) as KURS_RACCT,
+//     ApplyMap('KURS_DIFF', RBUKRS&BELNR&GJAHR&GKONT,GKONT) as KURS_CLIENT
+	
+//     ,RBUKRS&ApplyMap('RACCT_MOVE', RBUKRS&BELNR&GJAHR,'') as AccKey_KURS
+    ,KUNNR&PRCTR as Clients_Key
+//     ,Interval(MakeDate(left(TIMESTAMP,4),Mid(TIMESTAMP,5,2),Mid(TIMESTAMP,7,2))-BUDAT,'D') as Old_Movements
+    ,if(LIFNR = ' ' and MLPTYP = 'BB' and MLCATEG = 'ZU', SubField(ApplyMap('ZAKUP_DOCS2', RBUKRS&BELNR&GJAHR, ' '), '|', 1), LIFNR) as LIFNR_ZAKUP
+    ,if(LIFNR = ' ' and MLPTYP = 'BB' and MLCATEG = 'ZU', SubField(ApplyMap('ZAKUP_DOCS2', RBUKRS&BELNR&GJAHR, ' '), '|', 2), ZUONR) as ZUONR_ZAKUP
+    ,if(Left(MATNR, 8) = '00000000', mid(MATNR,9), MATNR)&PRCTR as mat_group_key_acdoca,
+    replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+    if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП
+//     ,if(KUNNR = ' ' and KDAUF <> ' ', ApplyMap('Clients', KDAUF, ' '), KUNNR) as KUNNR1
+//     ,ApplyMap('STORNO', RBUKRS&AWREF&GJAHR, AWREF_REV) as Storno_doc
+Resident ACDOCA;
+
+
+// Old_Dates:
+// Concatenate(Data) Load
+// 	*,
+//     replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+//     if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/ACDOCA_MONTH_TP.qvd](qvd)
+// // Where RDAY < '$(vDay)'
+// ;
+
+
+
+///$tab FINANCE P&L
+LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+
+Concatenate (Data)
+Load *,
+Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+'Чистая прибыль' as [Func_Sphere],
+'P&L' as AccType,
+'ValP' as RFAREA,
+replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП;
+
+SELECT
+	RBUKRS
+    FISCYEARPER
+	PRCTR
+    Sum(OSL) AS OSL2
+FROM ACDOCA
+WHERE RLDNR = '0L'
+	AND	RFAREA <> ' ' AND BUDAT <> '00000000'
+GROUP BY 
+RBUKRS
+FISCYEARPER
+PRCTR
+;
+
+
+
+
+Concatenate (Data)
+Load *,
+Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+'Валовая прибыль' as [Func_Sphere],
+'P&L' as AccType,
+'ValP' as RFAREA,
+replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП
+;
+
+SELECT
+	RBUKRS
+    FISCYEARPER
+	PRCTR
+    Sum(OSL) AS OSL2
+FROM ACDOCA
+WHERE 
+	((RLDNR = '0L' AND RFAREA <> ' ' AND (RACCT LIKE 'TP71%' OR RACCT LIKE 'TP61%')) OR
+    (RLDNR = '0L' AND (RFAREA = 'COS' OR RFAREA = 'REV') AND NOT (RACCT LIKE 'TP71%' OR RACCT LIKE 'TP61%')) OR
+    (RLDNR = '0L' AND RFAREA='OOI' and RACCT = '6109900000'))
+    AND BUDAT <> '00000000'
+GROUP BY 
+RBUKRS
+FISCYEARPER
+PRCTR
+;
+
+
+
+
+Concatenate (Data)
+Load *,
+Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+'Операционная прибыль' as [Func_Sphere],
+'P&L' as AccType,
+'ValP' as RFAREA,
+replace(Text(RIGHT(PRCTR, 4)),' ','') as WERKS_ACCESS,
+if(Not WildMatch(PRCTR, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PRCTR, 4))) as МВП
+;
+
+SELECT
+	RBUKRS
+    FISCYEARPER
+	PRCTR
+    Sum(OSL) AS OSL2
+FROM ACDOCA
+WHERE 
+	((RLDNR = '0L' AND RFAREA <> ' ' AND (RACCT LIKE 'TP71%' OR RACCT LIKE 'TP61%')) OR
+    (RLDNR = '0L' AND RFAREA IN ('COS', 'REV', 'SEL', 'ADM', 'OTH') AND NOT (RACCT LIKE 'TP71%' OR RACCT LIKE 'TP61%')) OR
+    (RLDNR = '0L' AND RFAREA='OOI' and RACCT = '6109900000'))
+    AND BUDAT <> '00000000'
+GROUP BY 
+RBUKRS
+FISCYEARPER
+PRCTR
+;
+
+///$tab FINANCE CALENDAR
+MinMaxDate:
+LOAD  
+  MIN(RDAY) AS MinDate, 
+  MAX(RDAY) AS MaxDate;  
+
+LOAD FIELDVALUE('RDAY',ITERNO()) AS RDAY  
+AUTOGENERATE(1)  
+WHILE NOT ISNULL(FIELDVALUE('RDAY',ITERNO()));
+
+Let vMinDate=peek('MinDate',-1,'MinMaxDate');
+Let vMaxDate=peek('MaxDate',-1,'MinMaxDate');
+Drop Table MinMaxDate;
+
+RollingData:
+Load
+'$(vMinDate)'+(Iterno()-1) AS RDAY
+Autogenerate 1
+While '$(vMinDate)'+(Iterno()-1) <= '$(vMaxDate)';
+
+
+LEFT JOIN (RollingData)
+LOAD
+RDAY as RDAY_DATE
+RESIDENT RollingData;
+
+INNER JOIN (RollingData) 
+LOAD *
+RESIDENT RollingData
+WHERE RDAY<=RDAY_DATE ;
+
+Calendar:
+NoConcatenate Load
+  RDAY,
+  Date(RDAY_DATE) as Дата_Н,
+  Day(RDAY_DATE) as День,
+  Date(RDAY_DATE) as Дата,
+  Num(MonthName(RDAY_DATE)) as [_Месяц-Год-Num],
+  Dual(Year(RDAY_DATE), YearStart(RDAY_DATE)) AS [Год],
+  Dual('К'&Num(Ceil(Num(Month(RDAY_DATE))/3)),Num(Ceil(NUM(Month(RDAY_DATE))/3),00)) AS [Квартал],
+  Dual('П'&Num(Ceil(Num(Month(RDAY_DATE))/6)),Num(Ceil(NUM(Month(RDAY_DATE))/6),00)) AS [Полугодие],
+  Dual(Year(RDAY_DATE)&'-К'&Num(Ceil(Num(Month(RDAY_DATE))/3)),QuarterStart(RDAY_DATE)) AS [Год-Квартал],
+  WeekDay(RDAY_DATE) AS [День Недели],
+  WeekName(RDAY_DATE) AS [Год-Неделя],
+  Month(RDAY_DATE) AS [Месяц] ,
+  Dual(Year(RDAY_DATE)&'-'&Month(RDAY_DATE), monthstart(RDAY_DATE)) AS [Год-Месяц],
+  Dual('Н'&Num(Week(RDAY_DATE),00), Num(Week(RDAY_DATE),00)) AS [Неделя],
+  if(RDAY=RDAY_DATE,1,0) as FlagD
+  
+resident RollingData;
+
+Drop table RollingData;
+///$tab PROD DATA
+LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+
+// $(Include=[lib://Data/Script/Format.qvs]);
+
+Let vDateMonth = AddMonths(MonthStart(Today()),-3);
+let vYearMonth = Date(AddMonths(MonthStart(Today()),-3), 'YYYYMM');
+
+
+
+MATDOC_AUFNR:
+Select
+	MATNR,
+    BWART,
+    AUFNR,
+//     BUDAT,
+    WERKS,
+    MAT_KDAUF,
+    MAT_KDPOS,
+    PRCTR,
+    YEARMONTH_BUDAT,
+    SUM(STOCK_QTY)
+FROM MATDOC
+WHERE AUFNR <> ' ' AND YEARMONTH_BUDAT >= $(vYearMonth)//AND MBLNR = '4900008528' //<> ' '
+GROUP BY MATNR
+    BWART
+    AUFNR
+    WERKS
+    MAT_KDAUF
+    MAT_KDPOS
+    PRCTR
+    YEARMONTH_BUDAT
+;
+
+MATDOC_OLD:
+Concatenate (MATDOC_AUFNR)
+Load *
+From [lib://Data/!QVD DATA/QVD/SAP/MATDOC_AUFNR.qvd](qvd)
+Where YEARMONTH_BUDAT < $(vYearMonth);
+
+Store MATDOC_AUFNR into [lib://Data/!QVD DATA/QVD/SAP/MATDOC_AUFNR.qvd](qvd);
+
+ZCOPCKM3LIST:
+Load *,
+// 	if(Left(MATERIAL, 8) = '00000000', mid(MATERIAL,9), MATERIAL)&PROFITCENTER as ZCO_MAT_KEY
+    PROFITCENTER as PROFITCENTER_ZCO
+//     ,MakeDate(Num#(POSTINGYEAR),Num#(POSTINGPERIOD),1) as RDAY
+    ,replace(Text(RIGHT(PROFITCENTER, 4)),' ','') as WERKS_ACCESS
+    ,PLANT as WERKS
+    ,PROFITCENTER as PRCTR
+    ,MakeDate(Num#(POSTINGYEAR),Num#(POSTINGPERIOD),1) as RDAY
+    ,if(Not WildMatch(PROFITCENTER, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PROFITCENTER, 4))) as МВП,
+    if(Left(MATERIAL, 8) = '00000000', mid(MATERIAL,9), MATERIAL)&PROFITCENTER as ZCO_MAT_KEY
+From [lib://Data/!QVD DATA/QVD/SAP/ZCOPCKM3LIST.qvd](qvd)
+// Where POSTINGYEAR = '2024'
+;
+Drop Field PROFITCENTER;
+
+IPPMFGORDER:
+Load *
+From [lib://Data/!QVD DATA/QVD/SAP/IPPMFGORDER.qvd](qvd);
+// Where MFGORDERPLANNEDSTARTDATE > '01.01.2024' and PRODUCTIONPLANT = '1203'
+;
+
+// MARA:
+// Load 
+// 	MATNR as Prod_Material
+//     ,BRGEW
+// From [lib://Data/!QVD DATA/QVD/SAP/MARA.qvd](qvd);
+// // Where FISCYEARPER = '2024002'
+// ;
+
+// MARA2:
+// Load 
+// 	Prod_Material as Cost_Material
+//     ,BRGEW as Cost_BRGEW
+// Resident MARA;
+// // Where FISCYEARPER = '2024002'
+// ;
+
+MVZ_TIMES_PERIOD:
+MAPPING Load
+	UKOSTL&FISCYEARPER
+	,MSL;
+SELECT
+	UKOSTL,
+    FISCYEARPER,
+    SUM(MSL)
+FROM ACDOCA
+WHERE UKOSTL <> ' ' AND AUFNR <> ' ' AND MATNR = ' '
+Group By UKOSTL FISCYEARPER
+;
+
+
+
+ZCOPCKM3LIST_GP:
+Mapping Load 
+  POSTINGYEAR&Right(POSTINGPERIOD,2)&MATERIAL&PLANT&SALESORDER&SALESORDERITEM as Prod_key
+//   num(num#(POSTINGPERIOD))&POSTINGYEAR&MATERIAL&PLANT&SALESORDER&SALESORDERITEM as Prod_key
+  ,ACTUALVALUE/QUANTITY // Факт цена
+Resident ZCOPCKM3LIST
+Where CURRENCYTYPE ='32' and CATEGORY = 'ZU' and PROCESSTYPE = 'BF'
+// Where FISCYEARPER = '2024002'
+;
+
+ZCOPCKM3LIST_COST:
+Mapping Load 
+  POSTINGYEAR&Right(POSTINGPERIOD,2)&MATERIAL&PLANT&SALESORDER&SALESORDERITEM as Prod_key
+//   num(num#(POSTINGPERIOD))&POSTINGYEAR&MATERIAL&PLANT&SALESORDER&SALESORDERITEM as Prod_key
+  ,ACTUALVALUE/QUANTITY // Факт цена
+Resident ZCOPCKM3LIST
+Where CURRENCYTYPE ='32' and CATEGORY = 'VN' and PROCESSTYPE = 'VF'
+// Where FISCYEARPER = '2024002'
+;
+
+IPPMFGORDER_PROD:
+Concatenate (Data)
+Load   
+  if(Left(MATERIAL, 8) = '00000000', mid(MATERIAL,9), MATERIAL)&PROFITCENTER as mat_group_key
+  ,PRODUCTIONPLANT
+  ,PROFITCENTER
+  ,MATERIAL as Prod_Material
+  ,ACTUALDELIVEREDQUANTITY // Количество ПМ
+  ,MFGORDERCONFIRMEDSCRAPQTY // Брак
+  ,ApplyMap('ZCOPCKM3LIST_GP',Date(MFGORDERPLANNEDSTARTDATE, 'YYYYMM')&MATERIAL&PRODUCTIONPLANT&SALESORDER&SALESORDERITEM) as GP_PRICE// Факт дата начала
+  ,MANUFACTURINGORDER
+  ,MFGORDERPLANNEDSTARTDATE as RDAY
+  ,MANUFACTURINGORDER&Date(MFGORDERPLANNEDSTARTDATE, 'YYYYM') as AUFNR_MVZ_KEY
+  ,MANUFACTURINGORDERTYPE
+  ,replace(Text(RIGHT(PROFITCENTER, 4)),' ','') as WERKS_ACCESS
+  ,PRODUCTIONPLANT as WERKS
+  ,PROFITCENTER as PRCTR
+  ,if(Not WildMatch(PROFITCENTER, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PROFITCENTER, 4))) as МВП
+Resident IPPMFGORDER
+// Where MANUFACTURINGORDER = '100000088397'
+// Where FISCYEARPER = '2024002'
+;
+
+MATDOC_DATA:
+Load 
+	MATNR as Cost_Material
+    ,BWART
+    ,AUFNR as MANUFACTURINGORDER
+    ,if(Match(BWART, '261','262'),ApplyMap('ZCOPCKM3LIST_COST',YEARMONTH_BUDAT&MATNR&WERKS&MAT_KDAUF&MAT_KDPOS),ApplyMap('ZCOPCKM3LIST_GP',YEARMONTH_BUDAT&MATNR&WERKS&MAT_KDAUF&MAT_KDPOS)) as COST_PRICE
+    
+//     ,if(Match(BWART, '261','262'),ApplyMap('ZCOPCKM3LIST_COST',Date(BUDAT, 'MYYYY')&MATNR&WERKS&MAT_KDAUF&MAT_KDPOS),ApplyMap('ZCOPCKM3LIST_GP',Date(BUDAT, 'MYYYY')&MATNR&WERKS&MAT_KDAUF&MAT_KDPOS)) as COST_PRICE
+    ,STOCK_QTY
+    ,if(Left(MATNR, 8) = '00000000', mid(MATNR,9), MATNR)&PRCTR&if(Match(PRCTR,'0000001101', '0000001201'), YEARMONTH_BUDAT) as cost_group_key
+//     ,STOCK_QTY/ApplyMap('MATDOC101',AUFNR)*1000 as Cost_Per_Tonn
+	,if(Match(BWART, '101','102'), STOCK_QTY, 0) as VIPUSK_PO_ZAKAZU
+//     ,MBLNR
+Resident MATDOC_AUFNR
+Where AUFNR <> ' '
+// and AUFNR = '100000088397'
+// and YEARMONTH_BUDAT = '202401' and WERKS = '1203'
+;
+
+MVZ_TIMES_PER_AUFNR:
+Load
+	AUFNR
+	,UKOSTL
+    ,FISCYEARPER
+    ,MSL as AUFNR_TIME
+    ,RBUKRS;
+Select
+  AUFNR,
+  UKOSTL,
+  SUM(msl),
+  FISCYEARPER,
+  RBUKRS
+FROM ACDOCA
+WHERE UKOSTL <> ' ' AND AUFNR <> ' ' AND MATNR = ' '
+Group By AUFNR UKOSTL FISCYEARPER RBUKRS
+;
+
+MVZ_COST:
+Load
+	RCNTR
+    ,RACCT
+	,OSL/ApplyMap('MVZ_TIMES_PERIOD', RCNTR&FISCYEARPER) as Time_Price
+    ,ApplyMap('MVZ_TIMES_PERIOD', RCNTR&FISCYEARPER) as Full_time
+    ,FISCYEARPER
+    ;
+SELECT
+	ACDOCA~RCNTR,
+    ACDOCA~RACCT,
+    ACDOCA~FISCYEARPER,
+    SUM(ACDOCA~OSL) AS SUMMA1
+FROM ACDOCA
+INNER JOIN CSKS
+	ON ACDOCA~RCNTR EQ CSKS~KOSTL
+    AND CSKS~KOSAR EQ 'F'
+WHERE ACDOCA~AWTYP NOT IN ('AFRU','AUAK','RKL') AND ACDOCA~RACCT <> '8901000000' AND ACDOCA~XOPVW <> 'X'
+GROUP BY ACDOCA~FISCYEARPER ACDOCA~RCNTR ACDOCA~RACCT
+;
+
+MVZ_COST2:
+Left Join (MVZ_TIMES_PER_AUFNR) Load
+	RCNTR as UKOSTL
+    ,RACCT
+    ,Time_Price
+    ,Full_time
+	,FISCYEARPER
+Resident MVZ_COST;
+
+MVZ_TIMES_PER_AUFNR2:
+Concatenate (MATDOC_DATA)
+Load
+	AUFNR as MANUFACTURINGORDER
+// 	,UKOSTL
+//     ,FISCYEARPER
+//     ,AUFNR_TIME
+    ,'Затраты' as Cost_Material
+    ,RACCT as Cost_Num
+    ,text(RACCT) as AccKey_Cost_Num
+//     ,Time_Price
+//     ,Full_time
+    ,AUFNR_TIME*Time_Price as AUFNR_TIME_SUM
+    ,'aaa' as BWART
+    ,'Затраты000000' as cost_group_key
+//     ,AUFNR&Left(FISCYEARPER,4)&Num(Num#(Right(FISCYEARPER, 3))) as AUFNR_MVZ_KEY
+Resident MVZ_TIMES_PER_AUFNR;
+
+
+ZCOPCKM3LIST:
+Concatenate (Data) Load *
+Resident ZCOPCKM3LIST;
+
+Drop Table ZCOPCKM3LIST;
+Drop Table IPPMFGORDER;
+Drop Table MATDOC_AUFNR;
+Drop Table MVZ_COST;
+Drop Table MVZ_TIMES_PER_AUFNR;
+Drop Table ACDOCA;
+///$tab VAT
+Let vDateMonth = Date(AddMonths(MonthStart(Today()),-3), 'YYYYMMDD');
+
+
+FIKZD_REGINV_IN:
+Load
+	BUKRS&INV_BELNR&GJAHR as Dok_Key
+    ,LIFNR as Поставщик_НДС
+    ,PARTN_NAME as Имя_Поставщика_НДС;
+Select
+	BUKRS
+    ,GJAHR
+    ,INV_BELNR
+    ,LIFNR
+    ,PARTN_NAME
+From FIKZD_REGINV_IN
+Where BUKRS <> '1400' and BUKRS <> '1000' and BUKRS <> '9000'
+// DATE_REG >= '$(vDateMonth)' and 
+
+;
+
+
+FIKZD_REGINV_OUT:
+Load
+	BUKRS&if(INVADD_BELNR=' ',INV_BELNR, INVADD_BELNR)&GJAHR as Dok_Key
+    ,KUNNR as Дебитор_НДС
+    ,PARTN_NAME as Имя_Дебитора_НДС;
+Select
+	BUKRS
+    ,GJAHR
+    ,INV_BELNR
+    ,KUNNR
+    ,PARTN_NAME
+    ,INVADD_BELNR
+From FIKZD_REGINV_OUT AS MAIN
+Where BUKRS <> '1400' and BUKRS <> '1000' and BUKRS <> '9000'
+// DATE_REG >= '$(vDateMonth)'
+;
+///$tab Exit
+Exit Script;
+///$tab Справочники
+Set vPath = '[lib://Data Sandbox/!QVD DATA/Jaha_test/MS1100/PREMODEL/Google';
+
+// Store vendor_prisv     into $(vPath)/vendor_prisv.qvd](qvd);
+// Store MVZ              into $(vPath)/MVZ.qvd](qvd);
+// Store DocName          into $(vPath)/DocName.qvd](qvd);
+// Store Clients          into $(vPath)/Clients.qvd](qvd);
+// Store PEREDEL          into $(vPath)/PEREDEL.qvd](qvd);
+// Store MVZ_List         into $(vPath)/MVZ_List.qvd](qvd);
+// Store Поставщики_EXCEL into $(vPath)/Поставщики_EXCEL.qvd](qvd);
+// Store Mat_Groups       into $(vPath)/Mat_Groups.qvd](qvd);
+// Store Mat_prod_groups  into $(vPath)/Mat_prod_groups.qvd](qvd);
+// Store Acc_Names        into $(vPath)/Acc_Names.qvd](qvd);
+// Store АЕИ_Справочник   into $(vPath)/АЕИ_Справочник.qvd](qvd);
+
+[DocName]:
+LOAD
+    BLART_KEY,
+    "Название вида документа"
+FROM $(vPath)/DocName.qvd](qvd);
+
+
+
+[Clients]:
+LOAD
+    Clients_Key1,
+    "Канал сбыта",
+    Имя,
     Страна,
-    "Vengroup 1",
-    "Vengroup 2"
-FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Контрагенты.xlsx]
-(ooxml, embedded labels, table is Поставщики);
-Call Timer;
+    Канал,
+    "Регион клиента"
+FROM $(vPath)/Clients.qvd](qvd);
+
+[PEREDEL]:
+LOAD
+    MANUFACTURINGORDERTYPE,
+    "Название вида заказа",
+    "Группа вида заказа"
+FROM $(vPath)/PEREDEL.qvd](qvd);
+
+
+[MVZ_List]:
+LOAD
+    RCNTR_KEY,
+    "НАЗВАНИЕ МВЗ",
+    [Группа МВЗ]
+FROM $(vPath)/MVZ_List.qvd](qvd);
+
+
+[Поставщики_EXCEL]:
+LOAD
+	Client_Zakup_key,
+    Страна_Поставщика,
+    Имя_Поставщика,
+    Поставщики_Группа1,
+    Поставщики_Группа2
+FROM $(vPath)/Поставщики_EXCEL.qvd](qvd);
+
+[Vendors]:
+Mapping LOAD
+    vendor_prisv_key,
+    "Тип допрасхода"
+From $(vPath)/vendor_prisv.qvd](qvd);
+
+[MVZ_Include]:
+Mapping Load
+	mvz_include_key,
+    Исключить
+From $(vPath)/MVZ.qvd](qvd);
+
+
+[Clients]:
+Mapping Load
+	VBELN,
+    KUNNR
+From [lib://Data/!QVD DATA/QVD/SAP/VBAK.qvd](qvd);
+
+Mat_prod_groups:
+Load
+  cost_group_key,
+  [Материал затрат],
+  [Группа затрат],
+  [Группа для анализа затрат],
+  "Группа 3 Затрат",
+  "Группа 4 Затрат",
+  "Группа 5 Затрат",
+  [Уд. Вес затрат],
+  [Передел ГП затрат] 
+From $(vPath)/Mat_prod_groups.qvd](qvd);
+
+
+[Mat_Groups]:
+LOAD
+  mat_group_key,
+  [Имя Материала],
+  [Группа Материала],
+  [Группа Материала для анализа],
+  "Группа 3",
+  "Группа 4",
+  "Группа 5",
+  [Удельный вес],
+  [Балансовая группа материала] 
+FROM $(vPath)/Mat_Groups.qvd](qvd);
+
+
+[Mat_Groups_ACDOCA]:
+LOAD
+  mat_group_key as mat_group_key_acdoca,
+  [Имя Материала] as [Имя Материала acdoca],
+  [Группа Материала] as [Группа Материала acdoca],
+  [Группа Материала для анализа] as [Группа Материала для анализа acdoca],
+  "Группа 3" as "Группа 3 acdoca",
+  "Группа 4" as "Группа 4 acdoca",
+  "Группа 5" as "Группа 5 acdoca",
+  [Удельный вес] as [Удельный вес acdoca],
+  [Удельный вес] as UMREN_UMREZ_7,
+  [Балансовая группа материала] as [Балансовая группа материала acdoca] 
+Resident Mat_Groups;
 
 
 
-///$tab Calendar
-$(Include=[lib://Data/Script/Calendar.qvs]);
+[Mat_CKM3N_groups]:
+LOAD
+  mat_group_key as ZCO_MAT_KEY,
+  [Имя Материала] as [Имя Материала CKM3N],
+  [Группа Материала] as [Группа Материала CKM3N],
+  [Группа Материала для анализа] as [Группа Материала для анализа CKM3N],
+  "Группа 3" as "Группа 3 CKM3N",
+  "Группа 4" as "Группа 4 CKM3N",
+  "Группа 5" as "Группа 5 CKM3N",
+  [Удельный вес] as [Удельный вес CKM3N],
+  [Удельный вес] as UMREN_UMREZ_MATERIAL_7,
+  [Балансовая группа материала] as [Балансовая группа материала CKM3N] 
+Resident Mat_Groups;
+
+
+[Acc_Names]:
+LOAD
+  AccKey,
+  "Основной счет",
+  "Подробный текст ОСч",
+  "ГРУППА 1",
+  "ГРУППА 2",
+  "ГРУППА 3",
+  "ГРУППА 4",
+  "ГРУППА 5 (Для МВЗ)"
+FROM $(vPath)/Acc_Names.qvd](qvd);
+
+
+[KURS_DIFF_Names]:
+LOAD
+	AccKey as AccKey_KURS,
+    "Основной счет" as "Основной счет_КР",
+    "Подробный текст ОСч" as "Подробный текст ОСч_КР",
+    "ГРУППА 1" as "ГРУППА 1_КР",
+    "ГРУППА 2" as "ГРУППА 2_КР",
+    "ГРУППА 3" as "ГРУППА 3_КР",
+    "ГРУППА 4" as "ГРУППА 4_КР",
+    "ГРУППА 5 (Для МВЗ)" as "ГРУППА 5 (Для МВЗ)_КР"
+Resident Acc_Names;
+
+[KURS_DIFF_Cost_Num]:
+LOAD
+	AccKey as AccKey_Cost_Num,
+    "Основной счет" as "Основной счет_КР_Cost_Num",
+    "Подробный текст ОСч" as "Подробный текст ОСч_КР_Cost_Num",
+    "ГРУППА 1" as "ГРУППА 1_КР_Cost_Num",
+    "ГРУППА 2" as "ГРУППА 2_КР_Cost_Num",
+    "ГРУППА 3" as "ГРУППА 3_КР_Cost_Num",
+    "ГРУППА 4" as "ГРУППА 4_КР_Cost_Num",
+    "ГРУППА 5 (Для МВЗ)" as "ГРУППА 5 (Для МВЗ)_КР_Cost_Num"
+Resident Acc_Names;
+
+
+
+[АЕИ_Справочник]:
+LOAD
+    MATNR,
+    UMREN_UMREZ,
+    АЕИ_0,
+    АЕИ_1,
+    АЕИ_2,
+    АЕИ_3,
+    АЕИ_4,
+    АЕИ_5,
+	АЕИ_6,
+    UMREN_UMREZ_0,
+    UMREN_UMREZ_1,
+    UMREN_UMREZ_2,
+    UMREN_UMREZ_3,
+    UMREN_UMREZ_4,
+    UMREN_UMREZ_5,
+    UMREN_UMREZ_6
+FROM $(vPath)/АЕИ_Справочник.qvd](qvd);
+;
+
+[АЕИ_Справочник_ГП]:
+LOAD
+    MATNR as Prod_Material,
+    UMREN_UMREZ as UMREN_UMREZ_Prod_Material,
+    АЕИ_0 as АЕИ_Prod_Material_0,
+    АЕИ_1 as АЕИ_Prod_Material_1,
+    АЕИ_2 as АЕИ_Prod_Material_2,
+    АЕИ_3 as АЕИ_Prod_Material_3,
+    АЕИ_4 as АЕИ_Prod_Material_4,
+    АЕИ_5 as АЕИ_Prod_Material_5,
+    АЕИ_6 as АЕИ_Prod_Material_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_Prod_Material_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_Prod_Material_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_Prod_Material_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_Prod_Material_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_Prod_Material_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_Prod_Material_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_Prod_Material_6	
+Resident АЕИ_Справочник
+;
+
+[АЕИ_Справочник_Cost]:
+LOAD
+    MATNR as Cost_Material,
+    UMREN_UMREZ as UMREN_UMREZ_Cost_Material,
+    АЕИ_0 as АЕИ_Cost_Material_0,
+    АЕИ_1 as АЕИ_Cost_Material_1,
+    АЕИ_2 as АЕИ_Cost_Material_2,
+    АЕИ_3 as АЕИ_Cost_Material_3,
+    АЕИ_4 as АЕИ_Cost_Material_4,
+    АЕИ_5 as АЕИ_Cost_Material_5,
+    АЕИ_6 as АЕИ_Cost_Material_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_Cost_Material_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_Cost_Material_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_Cost_Material_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_Cost_Material_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_Cost_Material_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_Cost_Material_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_Cost_Material_6
+Resident АЕИ_Справочник
+;
+
+[АЕИ_Справочник_ZCO]:
+LOAD
+    MATNR as MATERIAL,
+    UMREN_UMREZ as UMREN_UMREZ_MATERIAL,
+    АЕИ_0 as АЕИ_MATERIAL_0,
+    АЕИ_1 as АЕИ_MATERIAL_1,
+    АЕИ_2 as АЕИ_MATERIAL_2,
+    АЕИ_3 as АЕИ_MATERIAL_3,
+    АЕИ_4 as АЕИ_MATERIAL_4,
+    АЕИ_5 as АЕИ_MATERIAL_5,
+    АЕИ_6 as АЕИ_MATERIAL_6,
+    UMREN_UMREZ_0 as UMREN_UMREZ_MATERIAL_0,
+    UMREN_UMREZ_1 as UMREN_UMREZ_MATERIAL_1,
+    UMREN_UMREZ_2 as UMREN_UMREZ_MATERIAL_2,
+    UMREN_UMREZ_3 as UMREN_UMREZ_MATERIAL_3,
+    UMREN_UMREZ_4 as UMREN_UMREZ_MATERIAL_4,
+    UMREN_UMREZ_5 as UMREN_UMREZ_MATERIAL_5,
+	UMREN_UMREZ_6 as UMREN_UMREZ_MATERIAL_6
+Resident АЕИ_Справочник
+;
+
+
+
+
+
+[Vid_Dvij]:
+Load * Inline [
+BWART, BWART_NAME
+101, Выпуск
+102, Выпуск
+531, Тех. Отход
+532, Тех. Отход
+261, Затраты
+262, Затраты
+'aaa', Расходы
+];
+
+// Drop Table IPPMFGORDER, MATDOC;
+
+[CATEGORY_TEXT]:
+Load * Inline [
+CATEGORY, CATEGORY_TEXT
+AB, Начальные запасы
+PC, Изменения цен
+ZU, Поступления
+VP, Прочие увеличения/уменьшения запасов материалов
+VN, Потребление
+EB, Итоговое сальдо
+NV, Не распределено (устарело)
+KB, Кумулятивный запас
+NC, Не перерассчитано
+ND, Не распределено
+
+];
+
+[TYPEPROC_TEXT]:
+Load * Inline [
+PROCESSTYPE, PROCESSTYPE_TEXT
+VUBS, Проводка переноса особого запаса
+VU, Перемещение запаса
+VP, Проект
+VL, Обработка давальческого материала
+VKA, Заказ клиента
+VK, Место возникновения затрат
+VF, Производство
+VEAU, Потребление для 1-уровневых заказов
+V+, Потребление
+DC, Прочие(проверка)
+BUBS, Проводка переноса особого запаса
+BU, Перемещение запаса
+BL, Обработка давальческого материала
+BF, Производство
+BB, Заказ на поставку
+B+, Заготовка
+' ', Начало
+];
+///$tab Раздел 2
+// tmp:
+// Load * Inline [
+// Дата
+// 01.01.2024
+// 30.03.2024
+// ];
+
+Календарь:
+load	
+date(MinDate+iterno()-1) as [День]
+while date(MinDate+iterno()-1)<=MaxDate;
+
+load
+date(min(FieldValue('Дата',recno()))) as MinDate,
+date(max(FieldValue('Дата',recno()))) as MaxDate
+AutoGenerate FieldValueCount('Дата');
+
+left join load День as Дата Resident Календарь where Exists(Дата,День);
+
+Календарь_НИ:
+load
+День,
+Дата,
+'Без накопления' as Накопительный_итог
+Resident Календарь where Дата=День;
+
+load
+День,
+Дата,
+'По неделям' as Накопительный_итог
+Resident Календарь where Дата<=День and Week(Дата)=Week(День) and year(Дата)=year(День);
+
+load
+День,
+Дата,
+'По месяцам' as Накопительный_итог
+Resident Календарь where Дата<=День and monthstart(Дата)=monthstart(День);
+
+load
+День,
+Дата,
+'По кварталам' as Накопительный_итог
+Resident Календарь where Дата<=День and quarterstart(Дата)=quarterstart(День);
+
+load
+День,
+Дата,
+'По годам' as Накопительный_итог
+Resident Календарь where Дата<=День and year(Дата)=year(День);
+
+Concatenate load
+День,
+Дата,
+День-Дата as AsOfDate,
+(year(День)*12+month(День))-(year(Дата)*12+month(Дата)) as AsOfMonth,
+(year(День)*4+ceil(month(День)/3))-(year(Дата)*4+ceil(month(Дата)/3)) as AsOfQuarter,
+year(День)-year(Дата) as AsOfYear,
+'Полный' as Накопительный_итог
+Resident Календарь where Дата<=День;
+
+drop table Календарь;
+
+left join (Календарь_НИ) load distinct
+
+День,
+//с привязкой к году
+date(monthstart(День),'MMMM YY') as МесяцГод,
+date(weekstart(День)) as НеделяГод,
+QuarterName(День) as КварталГод,
+date(YearStart(День),'YYYY') as Год,
+
+//без привязки к году
+month(День) as Месяц,
+Week(День) as Неделя,
+'Q' & ceil(MONTH(День)/3) as Квартал,
+
+//флаги
+InYearToDate([День],today(),0) as InYTD,
+year(День)-year(today()) as Лет_Назад,
+(year([День])*12+month(День))-(year(today())*12+month(today())) as Месяцев_назад
+Resident Календарь_НИ;
+
+
+[AxisViz]: 
+DECLARE FIELD DEFINITION
+	FIELDS   
+    Dual(Year($1), YearStart($1)) AS [Year] Tagged ('$axis','$hidden'),
+	date(monthstart($1),'MMM') as Месяц Tagged ('$axis','$hidden'),
+    date($1,'D') as День Tagged ('$axis','$hidden');
+DERIVE FIELDS FROM FIELDS [День],[МесяцГод],Дата USING [AxisViz];
+///$tab Back
+// [Val-Prib]:
+// Concatenate(Data) Load
+//     RBUKRS,
+//     PRCTR,
+//     Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+//     KSL1 as KSL,
+//     [Func_Sphere1] as [Func_Sphere],
+//     'P&L' as AccType,
+//     'ValP' as RFAREA
+// Resident tmp;
+
+
+
+
+// tmp:
+// Load
+// 	[Func_Sphere],
+//     RBUKRS,
+//     PRCTR,
+//     FISCYEARPER,
+//     Sum(KSL) as KSL1,
+//     'Валовая прибыль' as [Func_Sphere1]
+// Resident Data
+// Where Match([Func_Sphere],'Себестоимость','Доходы реализации')
+// Group By [Func_Sphere],RBUKRS,PRCTR,FISCYEARPER;
+
+// [Val-Prib]:
+// Concatenate(Data) Load
+//     RBUKRS,
+//     PRCTR,
+//     Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+//     KSL1 as KSL,
+//     [Func_Sphere1] as [Func_Sphere],
+//     'P&L' as AccType,
+//     'ValP' as RFAREA
+// Resident tmp;
+///$tab Раздел
+// LOAD
+//     БЕ,
+//     "Основной счет",
+//     "Краткий текст",
+//     "Подробный текст ОСч",
+//     "ГРУППА 1",
+//     "ГРУППА 2",
+//     "ГРУППА 3",
+//     "ГРУППА 4",
+//     "ГРУППА 5 (Для МВЗ)"
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001) (res_qlik.dev000)/1w7Yx-8NWMbAPRy1FuxIlLVjL6YmeYq22/План Счетов.xlsx]
+// (ooxml, embedded labels, table is Лист1);
+
+// [Поставщики_EXCEL]:
+// LOAD
+//     Поставщик,
+//     МВП,
+//     Страна,
+//     "Имя 1",
+//     "Vengroup 1",
+//     "Vengroup 2"
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1w7Yx-8NWMbAPRy1FuxIlLVjL6YmeYq22/Контрагенты.xlsx]
+// (ooxml, embedded labels, table is Поставщики);
+
+// Exit Script;
+
+// [Mat_Groups]:
+// LOAD
+//   Материал & '000000' & Завод as mat_group_key,
+//   Имя as [Имя Материала],
+//   "Группа 1" as [Группа Материала],
+//   "Группа 2" as [Группа Материала для анализа],
+//   "Группа 3",
+//   "Группа 4",
+//   "Уд. Вес" as [Удельный вес],
+//   "Балансовая группа" as [Балансовая группа материала] 
+// FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/1Lwlh1rGFx1kFF4_rtI5SdsU-_12DWY91/1201.xlsx]
+// (ooxml, embedded labels, table is [Группы материалов]);
+
+
+///$tab test
+//1301, 1204
+Set vFolders1 ='1DX-I7dh-5sHLNGtJKGBudMfhFvW86com', '18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4';
+//1201, 1101
+Set vFolders2 ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc', '135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25';
+
+for each FLD in $(vFolders2)
+[MAT]:
+CrossTable (Месяц, Удельный_вес_по_месяцам, 11)
+LOAD
+*
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Материалы.xlsx]
+(ooxml, embedded labels, table is [Группы материалов]);
+Next
+
+Mat_prod_groups:
+Load
+  Материал & '000000' & Завод & Месяц as cost_group_key,
+  Имя as [Материал затрат],
+  "Группа 1" as [Группа затрат],
+  "Группа 2" as [Группа для анализа затрат],
+  "Группа 3" AS "Группа 3 Затрат",
+  "Группа 4" AS "Группа 4 Затрат",
+  "Группа 5" AS "Группа 5 Затрат",
+  Удельный_вес_по_месяцам as [Уд. Вес затрат],
+  "Балансовая группа" as [Передел ГП затрат] 
+Resident MAT;
+
+Drop Table MAT;
+
+Exit Script;

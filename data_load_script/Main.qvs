@@ -1,0 +1,161 @@
+///$tab Main
+SET ThousandSep=' ';
+SET DecimalSep=',';
+SET MoneyThousandSep=' ';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='# ##0,00 ₽;-# ##0,00 ₽';
+SET TimeFormat='h:mm:ss';
+SET DateFormat='DD.MM.YYYY';
+SET TimestampFormat='DD.MM.YYYY h:mm:ss[.fff]';
+SET FirstWeekDay=0;
+SET BrokenWeeks=1;
+SET ReferenceDay=0;
+SET FirstMonthOfYear=1;
+SET CollationLocale='ru-RU';
+SET MonthNames='янв.;февр.;мар.;апр.;мая;июн.;июл.;авг.;сент.;окт.;нояб.;дек.';
+SET LongMonthNames='январь;февраль;март;апрель;май;июнь;июль;август;сентябрь;октябрь;ноябрь;декабрь';
+SET DayNames='пн;вт;ср;чт;пт;сб;вс';
+SET LongDayNames='понедельник;вторник;среда;четверг;пятница;суббота;воскресенье';
+SET NumericalAbbreviation='3:k;6:M;9:G;12:T;15:P;18:E;21:Z;24:Y;-3:m;-6:μ;-9:n;-12:p;-15:f;-18:a;-21:z;-24:y';
+LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+Set vPath = '[lib://Data Sandbox/!QVD DATA/Jaha_test/MS1100/PREMODEL/';
+$(Include=[lib://Data/Script/Format.qvs]);
+$(Include=[lib://Data/Script/SA.qvs]);
+
+// MATDOC_DATA:
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/MATDOC_DATA.qvd](qvd);
+
+// Data:
+// Load *
+// From $(vPath)DataTP2.qvd](qvd)
+// Where FISCYEARPER = '2024003'
+// RBUKRS = '1200'
+// ;
+// Exit Script;
+
+// IPPMFGORDER_PROD:
+// Concatenate (Data) Load *
+//     //replace(PRODUCTIONPLANT,' ','') as WERKS_ACCESS
+// //     replace(Text(RIGHT(PROFITCENTER, 4)),' ','') as WERKS_ACCESS
+// //     ,PRODUCTIONPLANT as WERKS
+// //     ,PROFITCENTER as PRCTR
+// //     ,if(Not WildMatch(PROFITCENTER, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PROFITCENTER, 4))) as МВП
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/IPPMFGORDER_PROD.qvd](qvd);
+
+
+// ZCOPCKM3LIST:
+// Concatenate (Data) Load *
+//     //replace(PLANT,' ','') as WERKS_ACCESS
+// //     replace(Text(RIGHT(PROFITCENTER, 4)),' ','') as WERKS_ACCESS
+// //     ,PLANT as WERKS
+// //     ,PROFITCENTER as PRCTR
+// //     ,MakeDate(Num#(POSTINGYEAR),Num#(POSTINGPERIOD),1) as RDAY
+// //     ,if(Not WildMatch(PROFITCENTER, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PROFITCENTER, 4))) as МВП,
+// //     if(Left(MATERIAL, 8) = '00000000', mid(MATERIAL,9), MATERIAL)&PROFITCENTER as ZCO_MAT_KEY
+// From [lib://Data/!QVD DATA/QVD/SAP/ZCOPCKM3LIST.qvd](qvd);
+
+
+// ZCOPCKM3LIST:
+// Concatenate (Data) Load *,
+//     //replace(PLANT,' ','') as WERKS_ACCESS
+//     replace(Text(RIGHT(PROFITCENTER_ZCO, 4)),' ','') as WERKS_ACCESS
+//     ,PLANT as WERKS
+//     ,PROFITCENTER_ZCO as PRCTR
+//     ,if(Not WildMatch(PROFITCENTER_ZCO, 'DUMMY', '00000010*', '00000014*', 'T999'),Text(RIGHT(PROFITCENTER_ZCO, 4))) as МВП
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/ZCOPCKM3LIST.qvd](qvd);
+
+// ZCOPCKM3LIST:
+// Load 
+//   POSTINGPERIOD // Период
+//   ,POSTINGYEAR // Год
+//   ,Right(PROFITCENTER, 4) as PROFITCENTER_ZCO  // МВП
+//   ,CURRENCYTYPE // Валюта
+//   ,CATEGORY // Категория
+//   ,PROCESSTYPE // Тип процесса
+//   ,PROCESSTYPETEXT // Название типа процесса
+//   ,ACTUALPRICE // Факт цена
+//   ,PLANT // Завод
+//   ,MATERIAL // Материал
+//   ,MATERIALTEXT // Название материала
+//   ,CATEGORYTEXT // Название категории
+//   ,QUANTITY // Количество
+//   ,ACTUALVALUE // Фактическое значение
+//   ,CHRCT_RAWMAT // Тип сырья
+//   ,CHRCT_OUTER_SIDE_PC_ID // Код краски снаружи
+//   ,CHRCT_SURFACE_TREATMENT // Продуктовая группа
+//   ,CHRCT_SEALER_COLOR // Резина
+//   ,CHRCT_SYSTEM // Серия
+//   ,CHRCT_OUTER_SIDE_WG_ID // Цвет плёнки снаружи
+//   ,if(Left(MATERIAL, 8) = '00000000', mid(MATERIAL,9), MATERIAL)&PROFITCENTER as ZCO_MAT_KEY
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/ZCOPCKM3LIST.qvd](qvd);
+// ;
+    
+// Select
+//   POSTINGPERIOD // Период
+//   ,POSTINGYEAR // Год
+//   ,PROFITCENTER  // МВП
+//   ,CURRENCYTYPE // Валюта
+//   ,CATEGORY // Категория
+//   ,PROCESSTYPE // Тип процесса
+//   ,PROCESSTYPETEXT // Название типа процесса
+//   ,ACTUALPRICE // Факт цена
+//   ,PLANT // Завод
+//   ,MATERIAL // Материал
+//   ,MATERIALTEXT // Название материала
+//   ,CATEGORYTEXT // Название категории
+//   ,QUANTITY // Количество
+//   ,ACTUALVALUE // Фактическое значение
+//   ,CHRCT_RAWMAT // Тип сырья
+//   ,CHRCT_OUTER_SIDE_PC_ID // Код краски снаружи
+//   ,CHRCT_SURFACE_TREATMENT // Продуктовая группа
+//   ,CHRCT_SEALER_COLOR // Резина
+//   ,CHRCT_SYSTEM // Серия
+//   ,CHRCT_OUTER_SIDE_WG_ID // Цвет плёнки снаружи
+// From ZCOPCKM3LIST
+// Where PROFITCENTER = '0000001201' 
+// // and POSTINGYEAR = '2024'
+// ;
+
+// BKPF:
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/BKPF.qvd](qvd);
+
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/BKPF1006.qvd](qvd);
+
+// BKPF:
+// Load
+// 	BUKRS&BELNR&GJAHR as Dok_Key,
+//     TCODE
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/QVD/BKPF.qvd](qvd)
+// ;
+
+// MARA:
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/MARA.qvd](qvd);
+
+// MARA2:
+// Load *
+// From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/MARA2.qvd](qvd);
+
+// Calendar:
+// // Load *
+// // From [lib://Data/!QVD DATA/Jaha_test/MS1100/PREMODEL/Calendar.qvd](qvd);
+
+// Load *
+// From $(vPath)CalendarTP.qvd](qvd);
+
+// LIB CONNECT TO 'SapSql_s4-prd-app-03.res.akfa.group';
+
+// VBAK:
+// Load
+// 	VBELN,
+//     KUNNR
+// ;
+// Select
+// 	VBELN,
+//     KUNNR
+// From VBAK;
+
+// Drop Field TIMESTAMP;

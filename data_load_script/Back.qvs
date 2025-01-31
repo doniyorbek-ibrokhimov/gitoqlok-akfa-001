@@ -1,0 +1,37 @@
+///$tab Back
+// [Val-Prib]:
+// Concatenate(Data) Load
+//     RBUKRS,
+//     PRCTR,
+//     Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+//     KSL1 as KSL,
+//     [Func_Sphere1] as [Func_Sphere],
+//     'P&L' as AccType,
+//     'ValP' as RFAREA
+// Resident tmp;
+
+
+
+
+// tmp:
+// Load
+// 	[Func_Sphere],
+//     RBUKRS,
+//     PRCTR,
+//     FISCYEARPER,
+//     Sum(KSL) as KSL1,
+//     'Валовая прибыль' as [Func_Sphere1]
+// Resident Data
+// Where Match([Func_Sphere],'Себестоимость','Доходы реализации')
+// Group By [Func_Sphere],RBUKRS,PRCTR,FISCYEARPER;
+
+// [Val-Prib]:
+// Concatenate(Data) Load
+//     RBUKRS,
+//     PRCTR,
+//     Date(MakeDate(Left(FISCYEARPER,4),Right(FISCYEARPER,3),1),'DD.MM.YYYY') as RDAY,
+//     KSL1 as KSL,
+//     [Func_Sphere1] as [Func_Sphere],
+//     'P&L' as AccType,
+//     'ValP' as RFAREA
+// Resident tmp;

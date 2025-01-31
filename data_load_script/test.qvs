@@ -1,0 +1,31 @@
+///$tab test
+//1301, 1204
+Set vFolders1 ='1DX-I7dh-5sHLNGtJKGBudMfhFvW86com', '18kEW56baLgwkwmR1JsI6C_iC_MFRE3s4';
+//1201, 1101
+Set vFolders2 ='1IIp7zkE7TeHj9XO04lFoUE6UUSSiREMc', '135_XgyYZhJmgbE7I6gPQAKk1W4Y4vu25';
+
+for each FLD in $(vFolders2)
+[MAT]:
+CrossTable (Месяц, Удельный_вес_по_месяцам, 11)
+LOAD
+*
+FROM [lib://Google_Drive - ilxombek.noilbekov@akfagroup.com (res_qlik.dev001)/$(FLD)/Материалы.xlsx]
+(ooxml, embedded labels, table is [Группы материалов]);
+Next
+
+Mat_prod_groups:
+Load
+  Материал & '000000' & Завод & Месяц as cost_group_key,
+  Имя as [Материал затрат],
+  "Группа 1" as [Группа затрат],
+  "Группа 2" as [Группа для анализа затрат],
+  "Группа 3" AS "Группа 3 Затрат",
+  "Группа 4" AS "Группа 4 Затрат",
+  "Группа 5" AS "Группа 5 Затрат",
+  Удельный_вес_по_месяцам as [Уд. Вес затрат],
+  "Балансовая группа" as [Передел ГП затрат] 
+Resident MAT;
+
+Drop Table MAT;
+
+Exit Script;
