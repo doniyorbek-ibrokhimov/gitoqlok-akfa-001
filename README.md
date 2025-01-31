@@ -6,3 +6,4 @@ Created By doniyorbek-ibrokhimov(Doniyorbek Ibrokhimov) at Sun Dec 08 2024 18:24
 Branch Name|Qlik application
 ---|---
 main|[https://10.7.11.70/sense/app/c3336a44-9a08-4710-8b36-c0ef22d076be](https://10.7.11.70/sense/app/c3336a44-9a08-4710-8b36-c0ef22d076be)
+021|[https://10.7.11.70/sense/app/a1e8ec5d-5b88-4344-a9d1-49b03315dc67](https://10.7.11.70/sense/app/a1e8ec5d-5b88-4344-a9d1-49b03315dc67)
